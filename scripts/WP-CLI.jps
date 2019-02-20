@@ -1,0 +1,10 @@
+jpsType: update
+jpsVersion: '1.1'
+name: WP-CLI installation
+description: WP-CLI installation
+globals:
+  targetNodeID: "${settings.targetNodeID}"
+onInstall:
+  - cmd[${globals.targetNodeID}]:
+      curl -o /usr/local/bin/wp https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar && chmod +x /usr/local/bin/wp
+    user: root

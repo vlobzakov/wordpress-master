@@ -1,0 +1,93 @@
+jpsType: install
+jpsVersion: '1.1'
+id: wordpress
+name: Wordpress
+categories:
+  - apps/blogs
+  - apps/content-management
+logo: https://raw.githubusercontent.com/jelastic-jps/wordpress/master/images/wp.png
+homepage: http://wordpress.org/
+description: WordPress is web software you can use to create a beautiful website or blog. We like to say that WordPress is both free and priceless at the same time.
+baseUrl: https://raw.githubusercontent.com/mo3g89/wordpress-lemp/master
+
+globals:
+  DB_USER: jelastic-${fn.random}
+  DB_PASS: ${fn.password(20)}
+  ADMIN_PASSWD: ${fn.password(20)}
+
+ssl: false
+nodes:
+  - nodeType: lemp-dockerized
+    tag: 1.14.2-mysql-8.0.13
+    count: 1
+    cloudlets: 16
+    nodeGroup: cp
+    env:
+      SERVER_WEBROOT: /var/www/webroot
+
+  
+onInstall:
+  - log: Set Node Display Name
+  - setNodeDisplayName [cp]: LEMP
+ 
+  - uploadNginxPHPConfig
+  - uploadDBConfig
+  - createDBUser
+  - createDatabase
+  - deployContent
+  - installWPCLI
+  - installWP
+  - installPlugins
+
+actions:
+    
+    uploadNginxPHPConfig:
+      - cmd[cp]: |-
+         wget ${baseUrl}/configs/nginx/nginx.conf -O /etc/nginx/nginx.conf
+         wget ${baseUrl}/configs/nginx/default.conf -O /etc/nginx/conf.d/default.conf
+         wget ${baseUrl}/configs/nginx/fastcgi_cache.conf -O /etc/nginx/conf.d/fastcgi_cache.conf
+         wget ${baseUrl}/configs/php/wp-upload.ini -O /etc/php.d/wp-upload.ini
+         wget ${baseUrl}/configs/php/opcache.ini -O /etc/php.d/opcache.ini
+         wget ${baseUrl}/configs/php/extensions.ini -O /etc/php.d/extensions.ini
+         jem service restart nginx
+    
+    uploadDBConfig:
+      - cmd [cp]: |-
+          wget ${baseUrl}/configs/mysql/wordpress.cnf -O /etc/mysql/conf.d/wordpress.cnf
+          chmod 664 /etc/mysql/conf.d/wordpress.cnf
+          jem service restart mysql
+    
+    createDBUser:
+      - cmd [cp]: |-
+          wget https://raw.githubusercontent.com/jelastic-jps/mysql-cluster/master/scripts/setupUser.sh -O ~/setupUser.sh &>> /var/log/run.log
+          bash ~/setupUser.sh ${globals.DB_USER} ${globals.DB_PASS} &>> /var/log/run.log
+        user: root
+          
+    createDatabase:
+      - cmd[cp]:
+          mysql -u${globals.DB_USER} -p${globals.DB_PASS} -e "CREATE DATABASE IF NOT EXISTS wordpress;"
+
+    deployContent:
+      - deploy:
+          archive: https://wordpress.org/latest.tar.gz
+          name: WordPress-latest.tar.gz
+          context: ROOT
+
+    installWPCLI:
+      - cmd[cp]: curl -fsSL 'https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar' -o /usr/local/bin/wp && chmod +x /usr/local/bin/wp
+        user: root
+
+    installWP:
+      - cmd[cp]: |-
+         wp core config --dbhost=127.0.0.1 --dbname=wordpress --dbuser=${globals.DB_USER} --dbpass=${globals.DB_PASS} --path=${SERVER_WEBROOT}/ROOT
+         wp core install --title='' --admin_user=admin --admin_password=${globals.ADMIN_PASSWD} --url=${env.domain} --admin_email=${user.email} --path=${SERVER_WEBROOT}/ROOT
+         wp rewrite structure '/%postname%/' --path=${SERVER_WEBROOT}/ROOT
+         
+    installPlugins:
+      - cmd[cp]: |-
+         wget ${baseUrl}/configs/wordpress/plugins -O ~/plugins
+         for plugin in $(cat ~/plugins); do wp plugin install $plugin --activate --path=${SERVER_WEBROOT}/ROOT; done
+         wget ${baseUrl}/configs/wordpress/w3-total-cache.json -O ~/w3-total-cache.json
+         wp w3-total-cache import ~/w3-total-cache.json --path=${SERVER_WEBROOT}/ROOT
+
+success: /text/success.md

@@ -1,0 +1,282 @@
+version: 1.1
+type: install
+id: wp-cluster-startup
+name: WordPress Cluster
+description:
+  short: WordPress DevOps Pack
+settings:
+  fields:
+    - name: wp_title
+      caption: WP Title
+      type: string
+      default: HelloWorld
+      required: 'true'
+      regex: "^[\\w-.]*$"
+      regexText: Incorrect WP Title.
+  
+    - caption: Region
+      type: regionlist
+      name: regions
+      disableInactive: true
+      selectFirstAvailable: true
+      multiSelect: true
+      min: 1
+      max: 2      
+      filter:
+        isActive: true
+      default: premium-vz7
+      
+    - caption: Env Name  
+      type: envname
+      name: envName
+      dependsOn: region
+      randomName: true
+      showFullDomain: true
+      required: true
+      
+    - type: checkbox
+      name: cf-addon
+      caption: Registration on CloudFlare DNS. Public IP is required.
+      value: false
+
+    - type: string
+      name: customDomains
+      regex: "^([a-zA-Z0-9][a-zA-Z0-9-]{0,61}[a-zA-Z0-9]?(\\.[a-zA-Z0-9-]{1,}){1,6}[,|;]?){1,100}$"
+      caption: External Domain
+      default: .unigeocloud.com
+      required: true
+    - name: cf_email
+      caption: CF Email
+      type: string
+      default: ''
+      required: true
+    - name: cf_key
+      caption: CF KEY
+      type: string
+      default: ''
+      required: true
+    - name: cf_zone_id
+      caption: CF ZONE ID
+      type: string
+      default: ''
+      required: true
+
+    - type: checkbox
+      name: le-addon
+      caption: Install Let's Encrypt SSL Certificates. Public IP is required.
+      value: false
+      
+    - type: checkbox
+      name: cdn-addon
+      caption: Install Edgeport HTTP/3 Premium CDN  
+      value: false
+
+globals:
+  WP_JPS_URL: https://raw.githubusercontent.com/sych74/wordpress-cluster/master
+  DB_USER: jelastic-${fn.random}
+  DB_PASS: ${fn.password(10)}
+  SYNC_PASS: ${fn.password(10)}
+  PROTOCOL: http
+  WP_ADMIN_PASSWD: "${fn.password(10)}"
+
+onInstall:
+  - script: |
+      return { 
+        result: 0, 
+        regions: '${settings.regions}'.split(',')
+      }
+
+  - forEach(response.regions):
+      run: 
+        envName: ${settings.envName}
+        region: ${@i}
+        index: ${@}
+        
+  - setup-replication:
+      envName: ${settings.envName}
+
+  - setup-synchronization:
+      envName: ${settings.envName}
+
+  - if (${settings.cf-addon:false}):         
+    - registration-on-CloudFlare:
+        envName: ${settings.envName}
+
+  - if (${settings.le-addon:false}):         
+    - install-LE-addon:
+        envName: ${settings.envName}
+    - setGlobals:
+        PROTOCOL: https      
+
+  - install-wordpress:
+      envName: ${settings.envName}
+      protocol: ${globals.PROTOCOL}
+
+  - if (${settings.cdn-addon:false}):    
+    - install-CDN_addon:
+        envName: ${settings.envName}
+    - setup-CDN-WP:
+        envName: ${settings.envName}
+
+actions: 
+  run:
+    - if (!${this.index}):
+        setup-cluster: 
+          envName: ${this.envName}
+          region: ${this.region}
+          index: ${this.index}
+    - if (${this.index}):
+        setup-cluster: 
+          envName: ${this.envName}-${this.index}
+          region: ${this.region}
+          index: ${this.index}
+  
+  setup-cluster:
+    - script: return {result:0, envGroups:eval('(' + MANIFEST + ')').envGroups}
+    - install: 
+        jps: ${globals.WP_JPS_URL}/cluster.jps?_r=${fn.random}
+        envName: ${this.envName}
+        envGroups: ${response.envGroups}
+        region: ${this.region}
+        settings:
+          db_user: ${globals.DB_USER}
+          db_pass: ${globals.DB_PASS}
+          wp_admin_pass: ${globals.WP_ADMIN_PASSWD}
+          wp_install: false
+
+    - api: jelastic.env.control.GetEnvInfo
+      envName: ${this.envName}
+    - forEach(response.nodes): 
+        - if ('${@i.nodeGroup}' == 'storage'):
+            - setGlobals: 
+                storage-IP${this.index}: ${@i.address}
+
+        - if (${@i.ismaster} && '${@i.nodeGroup}' == 'cp'):
+            - setGlobals: 
+                masterCP-ID${this.index}: ${@i.id}
+                
+        - if (${@i.ismaster} && '${@i.nodeGroup}' == 'sqldb'):
+            - setGlobals: 
+                masterDB-IP${this.index}: ${@i.address}
+                masterDB-ID${this.index}: ${@i.id}
+
+            - api: env.control.ExecCmdById
+              envName: ${this.envName}
+              nodeId: ${@i.id}
+              commandList:
+                - command: |-
+                    wget https://raw.githubusercontent.com/jelastic-jps/mysql-cluster/master/configs/increment.cnf -O /etc/mysql/conf.d/increment.cnf
+                    wget https://raw.githubusercontent.com/jelastic-jps/mysql-cluster/master/configs/master.cnf -O /etc/mysql/conf.d/master.cnf &>> /var/log/run.log
+                    sed -i "s/auto-increment-offset.*/auto-increment-offset = $((${this.index} + 1))/" /etc/mysql/conf.d/increment.cnf
+                    sed -i '/server-id.*/d' /etc/mysql/conf.d/master.cnf
+                    sed -i '/binlog_format.*/d' /etc/mysql/conf.d/master.cnf
+                    sudo /etc/init.d/mysql restart
+              
+  setup-replication:
+    - install: 
+        jps: https://raw.githubusercontent.com/sych74/mysql-cluster/master/addons/regions-replication.jps?_r=${fn.random}
+        envName: ${this.envName}
+        nodeGroup: sqldb
+        settings:
+          targetNodeID: ${globals.masterDB-ID0}
+          remote_db_host: ${globals.masterDB-IP1}
+          remote_db_user: ${globals.DB_USER}
+          remote_db_pass: ${globals.DB_PASS}
+          local_db_host: ${globals.masterDB-IP0}
+          local_db_user: ${globals.DB_USER}
+          local_db_pass: ${globals.DB_PASS}
+
+
+  setup-synchronization:
+    - install: 
+        jps: https://raw.githubusercontent.com/dzotic9/file-sync/master/manifest.jps?_r=${fn.random}
+        envName: ${this.envName}
+        nodeGroup: storage
+        settings:
+          optional: two_envs
+          address: ${globals.storage-IP1}
+          password: ${globals.SYNC_PASS}
+          delay: 10
+
+    - install: 
+        jps: https://raw.githubusercontent.com/dzotic9/file-sync/master/manifest.jps?_r=${fn.random}
+        envName: ${this.envName}-1
+        nodeGroup: storage
+        settings:
+          optional: two_envs
+          address:  ${globals.storage-IP0}
+          password: ${globals.SYNC_PASS}
+          delay: 10
+
+  registration-on-CloudFlare:
+    - api: jelastic.env.control.GetEnvInfo
+      envName: ${this.envName}
+    - install: 
+        jps: ${globals.WP_JPS_URL}/addon/CF-DNS.jps?_r=${fn.random}
+        envName: ${this.envName}
+        nodeGroup: bl
+        settings:
+            custom_domain: ${settings.customDomains}
+            cf_email: ${settings.cf_email}
+            cf_key: ${settings.cf_key}
+            cf_zone_id: ${settings.cf_zone_id}
+
+  install-LE-addon:
+    - api: jelastic.env.control.GetEnvInfo
+      envName: ${this.envName}
+    - install: 
+        jps: https://github.com/jelastic-jps/lets-encrypt/blob/master/manifest.jps?_r=${fn.random}
+        envName: ${this.envName}
+        nodeGroup: bl
+        settings:
+          customDomains: ${settings.customDomains}
+          
+  install-CDN_addon:
+    - api: jelastic.env.control.GetEnvInfo
+      envName: ${this.envName}
+    - install:
+        jps: https://raw.githubusercontent.com/edgeport/cdn/master/manifest.yml?_r=${fn.random}
+        envName: ${this.envName}
+        nodeGroup: bl
+        settings:
+          masterEnv: ${this.envName}
+   
+  setup-CDN-WP:
+    - script: return jelastic.dev.scripting.Eval("c05ffa5b45628a2a0c95467ebca8a0b4", session, "cdn.info", {partnerCode:1})
+    - install: 
+        jps: ${globals.WP_JPS_URL}/addon/edgeport-CDN.jps?_r=${fn.random}
+        envName: ${this.envName}
+        nodeGroup: bl
+        settings:
+          cdn_url: ${this.envName}-${response.response.partnerCode}
+
+
+  install-wordpress:
+    - install: 
+        jps: ${globals.WP_JPS_URL}/scripts/WP-CLI.jps?_r=${fn.random}
+        envName: ${this.envName}
+        nodeGroup: cp
+        settings:
+          targetNodeID: ${globals.masterCP-ID0}
+
+    - install: 
+        jps: ${globals.WP_JPS_URL}/scripts/install-wordpress.jps?_r=${fn.random}
+        envName: ${this.envName}
+        nodeGroup: cp
+        settings:
+          db_host: DB
+          db_user: ${globals.DB_USER}
+          db_pass: ${globals.DB_PASS}
+          wp_admin_passwd: ${globals.WP_ADMIN_PASSWD}"
+          wp_title: ${settings.wp_title}
+          wp_url: ${this.protocol}://${settings.customDomains}
+          wp_path: /var/www/webroot/ROOT
+          targetNodeID: ${globals.masterCP-ID0}
+          
+    - install: 
+        jps: ${globals.WP_JPS_URL}/scripts/WP-cache.jps?_r=${fn.random}
+        envName: ${this.envName}
+        nodeGroup: cp
+        settings:
+          targetNodeID: ${globals.masterCP-ID0}
+    

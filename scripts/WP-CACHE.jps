@@ -1,0 +1,12 @@
+jpsType: update
+jpsVersion: '1.1'
+name: WP Cache Plugin installation
+description: WP Cache Plugin installation
+globals:
+  targetNodeID: "${settings.targetNodeID}"
+onInstall:
+  - log: Plugins installation and activation
+  - cmd[${globals.targetNodeID}]: |-
+      wp plugin install w3-total-cache --activate --path=${SERVER_WEBROOT}
+      wget https://raw.githubusercontent.com/sych74/wordpress-cluster/master/configs/wordpress/w3-total-cache.json -O ~/w3-total-cache.json
+      wp w3-total-cache import ~/w3-total-cache.json --path=${SERVER_WEBROOT}

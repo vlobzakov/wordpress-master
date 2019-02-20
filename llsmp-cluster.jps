@@ -1,0 +1,169 @@
+jpsType: install
+jpsVersion: '1.1'
+id: wordpress
+name: Wordpress Cluster
+categories:
+  - apps/clustered-dbs
+  - apps/popular
+  - apps/clusters
+  - apps/dev-and-admin-tools
+  - apps/content-management
+description: Get your highly available and scalable clustered solution for WordPress,
+  the extremely popular open source CMS and blogging tool. This package is designed
+  to ensure the load tracking and distribution, as well as automatic adjusting the
+  amount of allocated resources according to it.
+logo: https://raw.githubusercontent.com/jelastic-jps/wordpress-cluster/master/images/wp-cluster.png
+baseUrl: https://raw.githubusercontent.com/mo3g89/wordpress-litespeed/master
+
+globals:
+  DB_USER: jelastic-${fn.random}
+  DB_PASS: ${fn.password(20)}
+  ADMIN_PASSWD: ${fn.password(20)}
+  
+settings:
+  fields:
+  - name: wp_title
+    caption: WP Title
+    type: string
+    default: HelloWorld
+    required: 'true'
+    regex: "^[\\w-.]*$"
+    regexText: Incorrect WP Title.
+    
+nodes:
+  - nodeType: litespeedphp-redis
+    tag: 5.3.5-php-7.3.0
+    count: 4
+    cloudlets: 8
+    nodeGroup: cp
+    scalingMode: STATEFUL
+    displayName: AppServer
+    links: 
+      - sqldb:DB
+    volumes:
+      - "/var/www/webroot/ROOT/wp-content"
+      - "/var/ftp/webroot/ROOT/wp-content"
+    volumeMounts:
+      "/var/www/webroot/ROOT/wp-content":
+        readOnly: false
+        sourcePath: "/data"
+        sourceNodeGroup: storage
+      "/var/ftp/webroot/ROOT/wp-content":
+        readOnly: false
+        sourcePath: "/data"
+        sourceNodeGroup: storage
+    env:
+        JELASTIC_EXPOSE: false
+
+  - nodeType: mariadb-dockerized
+    tag: 10.3.11
+    count: 3
+    cloudlets: 8
+    nodeGroup: sqldb
+    displayName: Database
+    env:
+      ON_ENV_INSTALL: ''
+ 
+  - nodeType: storage
+    cloudlets: 8
+    nodeGroup: storage
+    displayName: Storage
+
+  - nodeType: nginx
+    extip: true
+    count: 1
+    cloudlets: 32
+    nodeGroup: bl
+    displayName: Load balancer
+
+onAfterScaleOut[nodeGroup:cp]:
+  forEach(event.response.nodes):
+    setNodeDisplayName [${@i.id}]: AppServer
+
+onAfterScaleOut[nodeGroup:bl]:
+  forEach(event.response.nodes):
+    setNodeDisplayName [${@i.id}]: Load balancer
+
+onInstall:
+  - log: Auto Scaling Triggers
+  - script: "https://raw.githubusercontent.com/jelastic-jps/wordpress-cluster/master/scripts/addTriggers.js"
+
+  - log: Set Node Display Name
+  - setNodeDisplayName [bl]: Load balancer
+  - setNodeDisplayName [cp]: AppServer
+  - setNodeDisplayName [storage]: Storage
+
+  - log: DB Multi-Master Cluster Setup
+  - installJps:
+      jps: https://raw.githubusercontent.com/jelastic-jps/mysql-cluster/master/scripts/galera-configuration.jps
+      settings:
+        path: "https://raw.githubusercontent.com/jelastic-jps/mysql-cluster/master"
+        db_user: "${globals.DB_USER}"
+        db_pass: "${globals.DB_PASS}"
+        custom_conf: "${baseUrl}/configs/mysql/wordpress.cnf"
+      nodeGroup: sqldb
+
+  - setupLB
+
+  - forEach(i:nodes.cp):
+      - setupCP:
+          id: "${@i.id}"
+
+  - deployWP
+  - installWP-CLI
+  - setupWpMaster
+  - setupLSCWP
+  - setupWpSlave
+  
+actions:
+
+  setupLB:
+    - cmd[bl]: |-
+        sed -i "s/$(cat /etc/nginx/nginx.conf|grep worker_rlimit_nofile)/worker_rlimit_nofile 409060;/" /etc/nginx/nginx.conf
+        sed -i "s/$(cat /etc/nginx/nginx.conf|grep worker_connections)/worker_connections 18192;/" /etc/nginx/nginx.conf
+        wget ${baseUrl}/configs/nginx/nginx.conf.tpl -O /etc/nginx/templates/nginx.conf.tpl &>> /var/log/run.log
+        rm -f /etc/nginx/nginx-jelastic.conf; jem balancer rebuildCommon
+      user: root
+
+  deployWP:
+    - cmd[cp]: wget -qO - ${baseUrl}/shell-scripts/wp-install.sh |bash
+    
+  installWP-CLI:
+    - cmd[${nodes.cp.master.id}]: curl -fsSL 'https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar' -o /usr/local/bin/wp && chmod +x /usr/local/bin/wp
+      user: root
+
+  setupWpMaster:
+    cmd[${nodes.cp.master.id}]: |-
+        mysql -u${globals.DB_USER} -p${globals.DB_PASS} -h DB -e "CREATE DATABASE IF NOT EXISTS wordpress;"
+        wp core config --dbhost=DB --dbname=wordpress --dbuser=${globals.DB_USER} --dbpass=${globals.DB_PASS} --path=${SERVER_WEBROOT}
+        wp --allow-root core install --title='' --admin_user=admin --admin_password=${globals.ADMIN_PASSWD} --url=${env.domain} --admin_email=${user.email} --path=${SERVER_WEBROOT}
+        wget https://raw.githubusercontent.com/jelastic-jps/wordpress-cluster/master/configs/wordpress/wp-jelastic.php -O ${SERVER_WEBROOT}/wp-jelastic.php
+        sed -i "s/.*'wp-settings.php';.*/require_once ABSPATH . 'wp-jelastic.php';\n&/" ${SERVER_WEBROOT}/wp-config.php
+        mv ${SERVER_WEBROOT}/wp-config.php ${SERVER_WEBROOT}/wp-content/wp-config.php
+        ln -s ${SERVER_WEBROOT}/wp-content/wp-config.php ${SERVER_WEBROOT}/wp-config.php
+
+  setupWpSlave:
+     - forEach(nodes.cp):
+        if(${@i.id} != ${nodes.cp.master.id}):
+          cmd [${@i.id}]: |-
+            if [ ! -f ${SERVER_WEBROOT}/wp-config.php ]; then ln -s ${SERVER_WEBROOT}/wp-content/wp-config.php ${SERVER_WEBROOT}/wp-config.php; fi
+            if [ ! -f ${SERVER_WEBROOT}/.htaccess ]; then ln -s ${SERVER_WEBROOT}/wp-content/.htaccess_default ${SERVER_WEBROOT}/.htaccess; fi
+            wget https://raw.githubusercontent.com/jelastic-jps/wordpress-cluster/master/configs/wordpress/wp-jelastic.php -O ${SERVER_WEBROOT}/wp-jelastic.php
+            echo "define('DISABLE_WP_CRON', true);" >> ${SERVER_WEBROOT}/wp-jelastic.php
+  
+  setupLSCWP:
+    - cmd[${nodes.cp.master.id}]: |-
+        wp plugin install litespeed-cache --path=${SERVER_WEBROOT}
+        wp plugin activate litespeed-cache --path=${SERVER_WEBROOT}
+        wget ${baseUrl}/configs/wordpress/LSCWP_localhost.cfg -O ~/LSCWP.cfg
+        wp lscache-admin import_options ~/LSCWP.cfg --path=${SERVER_WEBROOT}
+        wp cache flush --path=${SERVER_WEBROOT}
+        mv ${SERVER_WEBROOT}/.htaccess ${SERVER_WEBROOT}/wp-content/.htaccess_default
+        ln -s ${SERVER_WEBROOT}/wp-content/.htaccess_default ${SERVER_WEBROOT}/.htaccess
+        
+  setupCP:
+    - cmd[${this.id}]: |-
+        sed -i "s/root@localhost/${user.email}/g" /var/www/conf/httpd_config.xml
+        sudo jem service restart
+        
+success: /text/success.md

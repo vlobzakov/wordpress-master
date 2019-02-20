@@ -1,0 +1,21 @@
+jpsType: update
+jpsVersion: '1.1'
+name: Addon for EdgePort CDN
+description: Addon for EdgePort CDN
+logo: https://raw.githubusercontent.com/jelastic-jps/wordpress-cluster/master/images/wp-cluster.png
+settings:
+    fields:
+    - name: cdn_url
+      caption: CDN URL
+      type: string
+      default: ''
+      required: true
+
+globals:
+  CDN_URL: ${settings.cdn_url} 
+
+onInstall:
+  - cmd[${nodes.cp.master.id}]: |-
+      wp w3-total-cache option set cdn.enabled true --type=boolean --path=${SERVER_WEBROOT}
+      wp w3-total-cache option set cdn.engine mirror --path=${SERVER_WEBROOT}
+      wp w3-total-cache option set cdn.mirror.domain ${globals.CDN_URL} --path=${SERVER_WEBROOT}
