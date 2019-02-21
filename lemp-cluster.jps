@@ -120,7 +120,7 @@ onInstall:
       settings:
         db_user: "${globals.DB_USER}"
         db_pass: "${globals.DB_PASS}"
-        custom_conf: "${baseUrl}/configs/mysql/wordpress.cnf"
+        custom_conf: "${baseUrl}/configs/sqldb/wordpress.cnf"
       nodeGroup: sqldb
 
   - log: CP Layer Setup
