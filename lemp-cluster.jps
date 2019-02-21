@@ -102,7 +102,7 @@ onInstall:
   - setGlobals:
       DB_USER: ${settings.db_user:jelastic-[fn.random]}
       DB_PASS: ${settings.db_pass:[fn.password(10)]}
-      WP_ADMIN_PASSWD: ${settings.wp_admin_pass:[fn.password(10)]}
+      WP_ADMIN_PASS: ${settings.wp_admin_pass:[fn.password(10)]}
       WP_INSTALL: ${settings.wp_install:true}
 
   - log: Auto Scaling Triggers
@@ -142,9 +142,8 @@ onInstall:
           db_host: DB
           db_user: "${globals.DB_USER}"
           db_pass: "${globals.DB_PASS}"
-          admin_passwd: "${globals.WP_ADMIN_PASSWD}"
+          wp_admin_pass: "${globals.WP_ADMIN_PASS}"
           wp_title: "${settings.wp_title}"
-          wp_path: /var/www/webroot/ROOT
           wp_url: "${env.url}"
           targetNodeID: ${nodes.cp.master.id}
   
