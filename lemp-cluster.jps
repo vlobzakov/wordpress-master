@@ -103,6 +103,7 @@ onInstall:
   - setGlobals:
       DB_USER: ${settings.db_user:jelastic-[fn.random]}
       DB_PASS: ${settings.db_pass:[fn.password(10)]}
+      REDIS_PASS: ${settings.redis_pass:[fn.password(10)]}
       WP_ADMIN_PASS: ${settings.wp_admin_pass:[fn.password(10)]}
       WP_INSTALL: ${settings.wp_install:true}
 
@@ -116,13 +117,15 @@ onInstall:
   - setNodeDisplayName [storage]: Storage
 
   - log: DB Galera  Setup
-  - installJps:
-      jps: https://raw.githubusercontent.com/sych74/mysql-cluster/master/scripts/galera-configuration.jps
-      settings:
-        db_user: "${globals.DB_USER}"
-        db_pass: "${globals.DB_PASS}"
-        custom_conf: "${baseUrl}/configs/sqldb/wordpress.cnf"
-      nodeGroup: sqldb
+  - install: https://raw.githubusercontent.com/sych74/mysql-cluster/master/scripts/galera-configuration.jps
+    settings:
+      db_user: "${globals.DB_USER}"
+      db_pass: "${globals.DB_PASS}"
+      custom_conf: "${baseUrl}/configs/sqldb/wordpress.cnf"
+    nodeGroup: sqldb
+
+  - log: NoSQL Layer Setup
+  - setupRedis
 
   - log: CP Layer Setup
   - forEach(nodes.cp):
@@ -131,30 +134,31 @@ onInstall:
 
   - if ('${globals.WP_INSTALL}' == 'true'):
     - log: Install WP-CLI
-    - installJps:
-        jps: "${baseUrl}/scripts/WP-CLI.jps"
-        settings:
-          targetNodeID: ${nodes.cp.master.id}
+    - install: ${baseUrl}/scripts/WP-CLI.jps
+      settings:
+        targetNodeID: ${nodes.cp.master.id}
 
     - log: Download and Install latest WordPress release
-    - installJps:
-        jps: "${baseUrl}/scripts/install-WP.jps"
-        settings:
-          db_host: DB
-          db_user: "${globals.DB_USER}"
-          db_pass: "${globals.DB_PASS}"
-          wp_admin_pass: "${globals.WP_ADMIN_PASS}"
-          wp_title: "${settings.wp_title}"
-          wp_url: "${env.url}"
-          targetNodeID: ${nodes.cp.master.id}
+    - install: ${baseUrl}/scripts/install-WP.jps
+      settings:
+        db_host: DB
+        db_user: "${globals.DB_USER}"
+        db_pass: "${globals.DB_PASS}"
+        wp_admin_pass: "${globals.WP_ADMIN_PASS}"
+        wp_title: "${settings.wp_title}"
+        wp_url: "${env.url}"
+        targetNodeID: ${nodes.cp.master.id}
   
-    - log: Plugins install
-    - installJps:
-        jps: "${baseUrl}/scripts/setup-plugins.jps"
-        settings:
-          server_webroot: /var/www/webroot/ROOT
-        
-    - setupRedis
+    - log: Cache setup
+    - install: ${baseUrl}/scripts/WP-CACHE.jps
+      settings:
+        plugin: w3tc
+        pgcache: true
+        objectcache: true
+        redis_host: REDIS
+        redis_pass: ${globals.REDIS_PASS}
+        targetNodeID: ${nodes.cp.master.id}
+
     - setupWPAdditional
 
 actions:
@@ -167,14 +171,12 @@ actions:
       wget ${baseUrl}/configs/cp/php/opcache.ini -O /etc/php.d/opcache.ini
       wget ${baseUrl}/configs/cp/php/extensions.ini -O /etc/php.d/extensions.ini
       wget ${baseUrl}/configs/cp/php/redis.ini -O /etc/php.d/redis.ini
-  - cmd [nosqldb]: cat /etc/redis.conf| tail -1| awk '{print $2}'
-  - cmd[${this.nodeId}]: |-
-      sed -i "s/_REDIS_PASSWD_/${response.responses.out}/" /etc/php.d/redis.ini
+      sed -i "s/_REDIS_PASSWD_/${globals.REDIS_PASS}/" /etc/php.d/redis.ini
       sudo service nginx restart
       
   setupRedis:
-    - cmd [nosqldb]: cat /etc/redis.conf| tail -1| awk '{print $2}'
-    - cmd[${nodes.cp.master.id}]: wp w3-total-cache option set objectcache.redis.password ${response.responses.out} --path=/var/www/webroot/ROOT
+    - cmd [nosqldb]: jem passwd set -p ${globals.REDIS_PASS}
+      user: root
     
   cleanFastCGICache:
     cmd[cp]: rm -rf /dev/shm/fastcgi_cache/*
