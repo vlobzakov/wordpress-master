@@ -9,7 +9,7 @@ description: Get your highly available and scalable clustered solution for WordP
   to ensure the load tracking and distribution, as well as automatic adjusting the
   amount of allocated resources according to it.
 logo: https://raw.githubusercontent.com/jelastic-jps/wordpress-cluster/master/images/wp-cluster.png
-baseUrl: https://raw.githubusercontent.com/sych74/wordpress-cluster/master
+baseUrl: https://raw.githubusercontent.com/sych74/wordpress-master/master
   
 settings:
   fields:
@@ -42,13 +42,8 @@ nodes:
       - nosqldb:REDIS
     volumes:
       - "/var/www/webroot/ROOT"
-      - "/var/ftp/webroot/ROOT"
     volumeMounts:
       "/var/www/webroot/ROOT":
-        readOnly: false
-        sourcePath: "/data/ROOT"
-        sourceNodeGroup: storage
-      "/var/ftp/webroot/ROOT":
         readOnly: false
         sourcePath: "/data/ROOT"
         sourceNodeGroup: storage
@@ -90,14 +85,14 @@ onAfterScaleOut[nodeGroup:bl]:
     setNodeDisplayName [${@i.id}]: Load balancer
 
 onAfterMigrate:
-  install: ${baseUrl}/addon/setupDomain.jps?_r=${fn.random}
+  install: ${baseUrl}/addon/Domain.jps?_r=${fn.random}
   envName: ${event.response.env.envName}
   settings:
     old_domain: ${env.domain}
     new_domain: ${event.response.env.domain}
     
 onAfterClone:
-  install: ${baseUrl}/addon/setupDomain.jps?_r=${fn.random}
+  install: ${baseUrl}/addon/Domain.jps?_r=${fn.random}
   envName: ${event.response.env.envName}
   settings:
     old_domain: ${env.domain}
@@ -142,7 +137,7 @@ onInstall:
 
     - log: Download and Install latest WordPress release
     - installJps:
-        jps: "${baseUrl}/scripts/install-wordpress.jps"
+        jps: "${baseUrl}/scripts/install-WP.jps"
         settings:
           db_host: DB
           db_user: "${globals.DB_USER}"
@@ -165,13 +160,13 @@ onInstall:
 actions:
   setupNode:
   - cmd[${this.nodeId}]: |-
-      wget ${baseUrl}/configs/nginx/nginx.conf -O /etc/nginx/nginx.conf
-      wget ${baseUrl}/configs/nginx/default.conf -O /etc/nginx/conf.d/default.conf
-      wget ${baseUrl}/configs/nginx/fastcgi_cache.conf -O /etc/nginx/conf.d/fastcgi_cache.conf
-      wget ${baseUrl}/configs/php/wp-upload.ini -O /etc/php.d/wp-upload.ini
-      wget ${baseUrl}/configs/php/opcache.ini -O /etc/php.d/opcache.ini
-      wget ${baseUrl}/configs/php/extensions.ini -O /etc/php.d/extensions.ini
-      wget ${baseUrl}/configs/php/redis.ini -O /etc/php.d/redis.ini
+      wget ${baseUrl}/configs/cp/nginx/nginx.conf -O /etc/nginx/nginx.conf
+      wget ${baseUrl}/configs/cp/nginx/default.conf -O /etc/nginx/conf.d/default.conf
+      wget ${baseUrl}/configs/cp/nginx/fastcgi_cache.conf -O /etc/nginx/conf.d/fastcgi_cache.conf
+      wget ${baseUrl}/configs/cp/php/wp-upload.ini -O /etc/php.d/wp-upload.ini
+      wget ${baseUrl}/configs/cp/php/opcache.ini -O /etc/php.d/opcache.ini
+      wget ${baseUrl}/configs/cp/php/extensions.ini -O /etc/php.d/extensions.ini
+      wget ${baseUrl}/configs/cp/php/redis.ini -O /etc/php.d/redis.ini
   - cmd [nosqldb]: cat /etc/redis.conf| tail -1| awk '{print $2}'
   - cmd[${this.nodeId}]: |-
       sed -i "s/_REDIS_PASSWD_/${response.responses.out}/" /etc/php.d/redis.ini
