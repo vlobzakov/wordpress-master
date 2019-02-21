@@ -46,7 +46,6 @@ settings:
       showFullDomain: true
       required: true
 
-
     - name: wp_title
       caption: WP Title
       type: string
@@ -65,22 +64,22 @@ settings:
       regex: "^([a-zA-Z0-9][a-zA-Z0-9-]{0,61}[a-zA-Z0-9]?(\\.[a-zA-Z0-9-]{1,}){1,6}[,|;]?){1,100}$"
       caption: External Domain
       default: .unigeocloud.com
-      required: true
+      required: false
     - name: cf_email
       caption: CF Email
       type: string
       default: ''
-      required: true
+      required: false
     - name: cf_key
       caption: CF KEY
       type: string
       default: ''
-      required: true
+      required: false
     - name: cf_zone_id
       caption: CF ZONE ID
       type: string
       default: ''
-      required: true
+      required: false
 
     - type: checkbox
       name: le-addon
@@ -98,7 +97,7 @@ globals:
   REDIS_PASS: ${fn.password(10)}
   SYNC_PASS: ${fn.password(10)}
   PROTOCOL: http
-  WP_ADMIN_PASSWD: "${fn.password(10)}"
+  WP_ADMIN_PASS: "${fn.password(10)}"
 
 onInstall:
   - script: |
@@ -116,7 +115,6 @@ onInstall:
   - setup-replication:
       envName: ${settings.envName}
       nodeGroup: sqldb
-      
 
   - setup-synchronization:
       envName: ${settings.envName}
@@ -169,6 +167,7 @@ actions:
 
     - api: jelastic.env.control.GetEnvInfo
       envName: ${this.envName}
+
     - forEach(response.nodes): 
         - if ('${@i.nodeGroup}' == 'storage'):
             - setGlobals: 
@@ -198,7 +197,7 @@ actions:
   setup-replication:
     - install: https://raw.githubusercontent.com/sych74/mysql-cluster/master/addons/regions-replication.jps?_r=${fn.random}
       envName: ${this.envName}
-      nodeGroup: ${this.nodeGroup}
+      nodeGroup: sqldb
       settings:
         targetNodeID: ${globals.masterDB-ID0}
         remote_db_host: ${globals.masterDB-IP1}
@@ -212,7 +211,7 @@ actions:
   setup-synchronization:
     - install: https://raw.githubusercontent.com/dzotic9/file-sync/master/manifest.jps?_r=${fn.random}
       envName: ${this.envName}
-      nodeGroup: ${this.nodeGroup}
+      nodeGroup: storage
       settings:
         optional: two_envs
         address: ${globals.storage-IP1}
@@ -221,7 +220,7 @@ actions:
 
     - install: https://raw.githubusercontent.com/dzotic9/file-sync/master/manifest.jps?_r=${fn.random}
       envName: ${this.envName}-1
-      nodeGroup: ${this.nodeGroup}
+      nodeGroup: storage
       settings:
         optional: two_envs
         address:  ${globals.storage-IP0}
@@ -231,9 +230,9 @@ actions:
   registration-on-CloudFlare:
     - api: jelastic.env.control.GetEnvInfo
       envName: ${this.envName}
-    - install: ${baseUrl}/addon/CF-DNS.jps?_r=${fn.random}
+    - install: ${baseUrl}/addon/cloudflare-DNS.jps?_r=${fn.random}
       envName: ${this.envName}
-      nodeGroup: ${this.nodeGroup}
+      nodeGroup: bl
       settings:
         custom_domain: ${settings.customDomains}
         cf_email: ${settings.cf_email}
@@ -245,7 +244,7 @@ actions:
       envName: ${this.envName}
     - install: https://github.com/jelastic-jps/lets-encrypt/blob/master/manifest.jps?_r=${fn.random}
       envName: ${this.envName}
-      nodeGroup: ${this.nodeGroup}
+      nodeGroup: bl
       settings:
         customDomains: ${settings.customDomains}
           
@@ -254,7 +253,7 @@ actions:
       envName: ${this.envName}
     - install: https://raw.githubusercontent.com/edgeport/cdn/master/manifest.yml?_r=${fn.random}
       envName: ${this.envName}
-      nodeGroup: ${this.nodeGroup}
+      nodeGroup: bl
       settings:
         masterEnv: ${this.envName}
    
@@ -262,7 +261,7 @@ actions:
     - script: return jelastic.dev.scripting.Eval("c05ffa5b45628a2a0c95467ebca8a0b4", session, "cdn.info", {partnerCode:1})
     - install: ${baseUrl}/addon/edgeport-CDN.jps?_r=${fn.random}
       envName: ${this.envName}
-      nodeGroup: ${this.nodeGroup}
+      nodeGroup: cp
       settings:
         cdn_url: ${this.envName}-${response.response.partnerCode}
 
@@ -295,5 +294,3 @@ actions:
         redis_host: REDIS
         redis_pass: ${globals.REDIS_PASS}
         targetNodeID: ${nodes.cp.master.id}
-
-   
