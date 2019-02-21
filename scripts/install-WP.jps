@@ -3,8 +3,7 @@ name: WordPress Installation addon
 description: This package for WowrdPress configurations
 
 globals:
-  WP_PATH: "${settings.wp_path}"
-  WP_ADMIN_PASSWD: "${settings.wp_admin_passwd}"
+  WP_ADMIN_PASS: "${settings.wp_admin_pass}"
   WP_TITLE: "${settings.wp_title}"
   DB_HOST: "${settings.db_host}"
   DB_NAME: wordpress
@@ -15,7 +14,7 @@ globals:
 
 onInstall:
   - cmd[${globals.targetNodeID}]: |-
-      wget -qO- 'https://wordpress.org/latest.tar.gz' | tar xz -C /tmp && mv /tmp/wordpress/* ${globals.WP_PATH}
+      wget -qO- 'https://wordpress.org/latest.tar.gz' | tar xz -C /tmp && mv /tmp/wordpress/* ${SERVER_WEBROOT}
       mysql -u${globals.DB_USER} -p${globals.DB_PASS} -h ${globals.DB_HOST} -e "CREATE DATABASE IF NOT EXISTS ${globals.DB_NAME};"
-      wp core config --dbhost=${globals.DB_HOST} --dbname=${globals.DB_NAME} --dbuser=${globals.DB_USER} --dbpass=${globals.DB_PASS} --path=${globals.WP_PATH}
-      wp core install --title="${globals.WP_TITLE}" --admin_user=admin --admin_password=${globals.WP_ADMIN_PASSWD} --url=${globals.WP_URL} --admin_email=${user.email} --path=${globals.WP_PATH}
+      wp core config --dbhost=${globals.DB_HOST} --dbname=${globals.DB_NAME} --dbuser=${globals.DB_USER} --dbpass=${globals.DB_PASS} --path=${SERVER_WEBROOT}
+      wp core install --title="${globals.WP_TITLE}" --admin_user=admin --admin_password=${globals.WP_ADMIN_PASS} --url=${globals.WP_URL} --admin_email=${user.email} --path=${SERVER_WEBROOT}
