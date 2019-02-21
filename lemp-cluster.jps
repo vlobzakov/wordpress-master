@@ -49,6 +49,7 @@ nodes:
         sourceNodeGroup: storage
     env:
       PHPFPM_MAX_CHILDREN: 3
+      SERVER_WEBROOT: /var/www/webroot/ROOT
 
   - nodeType: storage
     cloudlets: 8
