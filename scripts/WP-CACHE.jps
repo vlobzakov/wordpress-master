@@ -1,12 +1,50 @@
 jpsType: update
-jpsVersion: '1.1'
-name: WP Cache Plugin installation
-description: WP Cache Plugin installation
+name: WP W3 Total Cache plugin script
+description: WP W3 Total Cache plugin script
+
 globals:
-  targetNodeID: "${settings.targetNodeID}"
+  PLUGIN: ${settings.plugin}
+  REDIS_HOST: ${settings.redis_host}
+  REDIS_PASS: ${settings.redis_pass}
+  CDN_URL: ${settings.cdn_url}
+
 onInstall:
-  - log: Plugins installation and activation
-  - cmd[${globals.targetNodeID}]: |-
-      wp plugin install w3-total-cache --activate --path=${SERVER_WEBROOT}
-      wget https://raw.githubusercontent.com/sych74/wordpress-cluster/master/configs/wordpress/w3-total-cache.json -O ~/w3-total-cache.json
-      wp w3-total-cache import ~/w3-total-cache.json --path=${SERVER_WEBROOT}
+    
+  - setGlobals:
+      PGCACHE: ${settings.pgcache:false}
+      OBJECTCACHE: ${settings.objectcache:false}
+      EDGEPORT-CDN: ${settings.edgeport-cdn:false}
+
+  - install
+  - if ('${globals.PGCACHE}' == 'true'): pgcache
+  - if ('${globals.OBJECTCACHE}' == 'true'): objectcache
+  - if ('${globals.EDGEPORT-CDN}' == 'true'): edgeport-cdn
+
+actions:
+  install:
+    - if ('${globals.PLUGIN}'.toLowerCase() == 'w3tc'):
+        cmd[${this.id}]: |-
+          wp plugin install w3-total-cache --activate --path=${SERVER_WEBROOT}
+    - if ('${globals.PLUGIN}'.toLowerCase() == 'lscwp'):
+        cmd[${this.id}]: |-
+
+
+  pgcache:
+    - if ('${globals.PLUGIN}'.toLowerCase() == 'w3tc'):
+        cmd[${this.id}]: |-
+          wp w3-total-cache option set pgcache.enabled true --type=boolean --path=${SERVER_WEBROOT}
+          wp w3-total-cache option set pgcache.file.nfs true --type=boolean --path=${SERVER_WEBROOT}
+
+  objectcache:
+    - if ('${globals.PLUGIN}'.toLowerCase() == 'w3tc'):
+        cmd[${this.id}]: |-
+          wp w3-total-cache option set objectcache.enabled true --type=boolean --path=${SERVER_WEBROOT}
+          wp w3-total-cache option set objectcache.engine redis --path=${SERVER_WEBROOT}
+          wp w3-total-cache option set objectcache.redis.password ${globals.REDIS_PASS} --path=${SERVER_WEBROOT}
+
+  edgeport-cdn:
+    - if ('${globals.PLUGIN}'.toLowerCase() == 'w3tc'):
+        cmd[${this.id}]: |-
+          wp w3-total-cache option set cdn.enabled true --type=boolean --path=${SERVER_WEBROOT}
+          wp w3-total-cache option set cdn.engine mirror --path=${SERVER_WEBROOT}
+          wp w3-total-cache option set cdn.mirror.domain ${globals.CDN_URL} --path=${SERVER_WEBROOT}
