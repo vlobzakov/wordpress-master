@@ -1,7 +1,7 @@
 jpsType: install
 jpsVersion: '1.1'
 id: wordpress
-name: Wordpress Single
+name: Wordpress
 categories:
   - apps/popular
   - apps/dev-and-admin-tools
@@ -11,12 +11,7 @@ description: Get your highly available and scalable clustered solution for WordP
   to ensure the load tracking and distribution, as well as automatic adjusting the
   amount of allocated resources according to it.
 logo: https://raw.githubusercontent.com/jelastic-jps/wordpress-cluster/master/images/wp-cluster.png
-baseUrl: https://raw.githubusercontent.com/mo3g89/wordpress-litespeed/master
-
-globals:
-  DB_USER: jelastic-${fn.random}
-  DB_PASS: ${fn.password(20)}
-  ADMIN_PASSWD: ${fn.password(20)}
+baseUrl: https://raw.githubusercontent.com/sych74/wordpress-master/master
   
 settings:
   fields:
@@ -29,80 +24,79 @@ settings:
     regexText: Incorrect WP Title.
     
 nodes:
-  - nodeType: litespeedphp
-    tag: 5.3.5-php-7.2.11
+  - nodeType: llsmp-dockerized
+    tag: 5.3.5-php-7.3.0
     count: 1
-    cloudlets: 4
+    cloudlets: 8
     nodeGroup: cp
     scalingMode: STATEFUL
     displayName: AppServer
-    links: 
-      - sqldb:DB
     env:
         JELASTIC_EXPOSE: false
-
-  - nodeType: mysql5
-    count: 1
-    cloudlets: 4
 
 onAfterScaleOut[nodeGroup:cp]:
   forEach(event.response.nodes):
     setNodeDisplayName [${@i.id}]: AppServer
 
+onInstall:  
 
-onInstall:
-  - log: Auto Scaling Triggers
-  - script: "https://raw.githubusercontent.com/jelastic-jps/wordpress-cluster/master/scripts/addTriggers.js"
+  - setGlobals:
+      DB_USER: ${settings.db_user:jelastic-[fn.random]}
+      DB_PASS: ${settings.db_pass:[fn.password(10)]}
+      WP_ADMIN_PASS: ${settings.wp_admin_pass:[fn.password(10)]}
+      WP_INSTALL: ${settings.wp_install:true}
 
   - log: Set Node Display Name
-  - setNodeDisplayName [cp]: AppServer 
+  - setNodeDisplayName [cp]: AppServer
 
-  - forEach(i:nodes.cp):
-      - setupCP:
-          id: "${@i.id}"
-
+  - setupCP
   - deployWP
   - installWP-CLI
-  - setupWpMaster
+  - createDBUser
+  - createDatabase
+  - setupWP
   - setupLSCWP
+
   
 actions:
-
   deployWP:
-    - cmd[cp]: wget -qO- 'https://wordpress.org/latest.tar.gz' | tar xz -C ${SERVER_WEBROOT}
+    - deploy:
+       archive: https://wordpress.org/latest.tar.gz
+       name: WordPress-latest.tar.gz
+       context: ROOT
     
   installWP-CLI:
-    - cmd[${nodes.cp.master.id}]: curl -fsSL 'https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar' -o /usr/local/bin/wp && chmod +x /usr/local/bin/wp
+    - cmd[cp]: curl -fsSL 'https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar' -o /usr/local/bin/wp && chmod +x /usr/local/bin/wp
       user: root
+      
+  createDBUser:
+    - cmd [cp]: |-
+        wget https://raw.githubusercontent.com/jelastic-jps/mysql-cluster/master/scripts/setupUser.sh -O ~/setupUser.sh &>> /var/log/run.log
+        bash ~/setupUser.sh ${globals.DB_USER} ${globals.DB_PASS} &>> /var/log/run.log
+      user: root
+          
+  createDatabase:
+    - cmd[cp]:
+        mysql -u${globals.DB_USER} -p${globals.DB_PASS} -e "CREATE DATABASE IF NOT EXISTS wordpress;"
 
-  setupWpMaster:
-    - cmd[sqldb]: |-
-        mysql -uroot -p${nodes.sqldb.password} -e "CREATE DATABASE IF NOT EXISTS wordpress;"
-        mysql -uroot -p${nodes.sqldb.password} -e "CREATE USER '${globals.DB_USER}'@'%' IDENTIFIED BY '${globals.DB_PASS}'; GRANT ALL ON wordpress.* TO '${globals.DB_USER}'@'%'; FLUSH PRIVILEGES;"
-    - cmd[${nodes.cp.master.id}]: |-
-        mysql -u${globals.DB_USER} -p${globals.DB_PASS} -h DB -e "CREATE DATABASE IF NOT EXISTS wordpress;"
-        wp core config --dbhost=DB --dbname=wordpress --dbuser=${globals.DB_USER} --dbpass=${globals.DB_PASS} --path=${SERVER_WEBROOT}
+  setupWP:
+    cmd[cp]: |-
+        wp core config --dbhost=127.0.0.1 --dbname=wordpress --dbuser=${globals.DB_USER} --dbpass=${globals.DB_PASS} --path=${SERVER_WEBROOT}
         wp --allow-root core install --title='' --admin_user=admin --admin_password=${globals.ADMIN_PASSWD} --url=${env.domain} --admin_email=${user.email} --path=${SERVER_WEBROOT}
         wget https://raw.githubusercontent.com/jelastic-jps/wordpress-cluster/master/configs/wordpress/wp-jelastic.php -O ${SERVER_WEBROOT}/wp-jelastic.php
-        sed -i "s/.*'wp-settings.php';.*/require_once ABSPATH . 'wp-jelastic.php';\n&/" ${SERVER_WEBROOT}/wp-config.php
+        sed -i "s/.*'wp-settings.php';.*/require_once ABSPATH . 'wp-jelastic.php';\n&/" ${SERVER_WEBROOT}/wp-config.php    
   
   setupLSCWP:
-    - cmd[${nodes.cp.master.id}]: |-
+    - cmd[cp]: |-
         wp plugin install litespeed-cache --path=${SERVER_WEBROOT}
         wp plugin activate litespeed-cache --path=${SERVER_WEBROOT}
-        wget ${baseUrl}/configs/wordpress/LSCWP.cfg -O ~/LSCWP.cfg
+        wget ${baseUrl}/configs/wordpress/LSCWP_localhost.cfg -O ~/LSCWP.cfg
         wp lscache-admin import_options ~/LSCWP.cfg --path=${SERVER_WEBROOT}
         wp cache flush --path=${SERVER_WEBROOT}
-        mv ${SERVER_WEBROOT}/.htaccess ${SERVER_WEBROOT}/wp-content/.htaccess_default
-        ln -s ${SERVER_WEBROOT}/wp-content/.htaccess_default ${SERVER_WEBROOT}/.htaccess
-
         
   setupCP:
-    - cmd[${this.id}]: |-
+    - cmd[cp]: |-
         sed -i "s/root@localhost/${user.email}/g" /var/www/conf/httpd_config.xml
         sudo jem service restart
         
-success: '**Admin Panel**: [${env.url}wp-admin/](${env.url}wp-admin/)
-**Login**: admin
-**Password**: ${globals.ADMIN_PASSWD}
-To add custom domain name follow the steps described in the [documentation](http://docs.jelastic.com/custom-domains).'
+success: /text/success.md
