@@ -1,14 +1,22 @@
-version: 1.1
+ersion: 1.1
 type: install
 id: wp-cluster-startup
 name: WordPress Cluster
 description:
-  short: WordPress DevOps Pack
-  
+  short: WordPress DevOps Pack  
 baseUrl: https://raw.githubusercontent.com/sych74/wordpress-master/master
-
 settings:
   fields:
+    - caption: Stack
+      type: list
+      name: stack
+      default: lemp
+      required: true
+      values:        
+        - value: lemp
+          caption: NginxPHP
+        - value: llsmp
+          caption: LiteSpeed
     - type: list
       caption: Topology
       name: topology
@@ -153,7 +161,7 @@ actions:
   
   setup-cluster:
     - script: return {result:0, envGroups:eval('(' + MANIFEST + ')').envGroups}
-    - install: ${baseUrl}/lemp-${settings.topology}.jps?_r=${fn.random}
+    - install: ${baseUrl}/${settings.stack}-${settings.topology}.jps?_r=${fn.random}
       envName: ${this.envName}
       envGroups: ${response.envGroups}
       region: ${this.region}
@@ -258,8 +266,6 @@ actions:
         delay: 10
 
   registration-on-CloudFlare:
-    - api: jelastic.env.control.GetEnvInfo
-      envName: ${this.envName}
     - install: ${baseUrl}/addon/cloudflare-DNS.jps?_r=${fn.random}
       envName: ${this.envName}
       nodeGroup: ${globals.cdn-nodeGroup}
@@ -270,8 +276,6 @@ actions:
         cf_zone_id: ${settings.cf_zone_id}
 
   install-LE-addon:
-    - api: jelastic.env.control.GetEnvInfo
-      envName: ${this.envName}
     - install: https://github.com/jelastic-jps/lets-encrypt/blob/master/manifest.jps?_r=${fn.random}
       envName: ${this.envName}
       nodeGroup: ${globals.le-nodeGroup}
@@ -279,8 +283,6 @@ actions:
         customDomains: ${settings.customDomains}
           
   install-CDN_addon:
-    - api: jelastic.env.control.GetEnvInfo
-      envName: ${this.envName}
     - install: https://raw.githubusercontent.com/edgeport/cdn/master/manifest.yml?_r=${fn.random}
       envName: ${this.envName}
       nodeGroup: ${globals.cdn-nodeGroup}
