@@ -163,7 +163,8 @@ actions:
         wp_install: false
 
     - if ('${settings.topology}'.toLowerCase() == 'standalone'):
-      - setGlobals: 
+      - setGlobals:
+          DB_HOST: 127.0.0.1
           lsync-nodeGroup: cp
           cdn-nodeGroup: cp
           le-nodeGroup: cp
@@ -184,7 +185,8 @@ actions:
                 index: ${this.index}
 
     - if ('${settings.topology}'.toLowerCase() == 'cluster'):
-      - setGlobals: 
+      - setGlobals:
+          DB_HOST: DB
           lsync-nodeGroup: storage
           cdn-nodeGroup: bl
           le-nodeGroup: bl
@@ -305,15 +307,17 @@ actions:
       envName: ${this.envName}
       nodeGroup: cp
       settings:
-        db_host: DB
+        db_host: ${globals.DB_HOST}
         db_user: ${globals.DB_USER}
         db_pass: ${globals.DB_PASS}
-        wp_admin_pass: ${globals.WP_ADMIN_PASS}"
+        wp_admin_pass: ${globals.WP_ADMIN_PASS}
         wp_title: ${settings.wp_title}
         wp_url: ${env.url}
         targetNodeID: ${globals.masterCP-ID0}
 
     - install: ${baseUrl}/scripts/WP-CACHE.jps
+      envName: ${this.envName}
+      nodeGroup: cp
       settings:
         plugin: w3tc
         pgcache: true
