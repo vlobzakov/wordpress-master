@@ -114,11 +114,9 @@ onInstall:
         
   - setup-replication:
       envName: ${settings.envName}
-      nodeGroup: sqldb
 
   - setup-synchronization:
       envName: ${settings.envName}
-      nodeGroup: storage
 
   - if (${settings.cf-addon:false}):         
     - registration-on-CloudFlare:
@@ -162,13 +160,38 @@ actions:
       settings:
         db_user: ${globals.DB_USER}
         db_pass: ${globals.DB_PASS}
-        wp_admin_pass: ${globals.WP_ADMIN_PASSWD}
         wp_install: false
 
-    - api: jelastic.env.control.GetEnvInfo
-      envName: ${this.envName}
+    - if ('${settings.topology}'.toLowerCase() == 'standalone'):
+      - setGlobals: 
+          lsync-nodeGroup: cp
+          cdn-nodeGroup: cp
+          le-nodeGroup: cp
+    
+      - api: jelastic.env.control.GetEnvInfo
+        envName: ${this.envName}
+      - forEach(response.nodes):
+          if (${@i.ismaster} && '${@i.nodeGroup}' == 'cp'):
+            - setGlobals: 
+                masterDB-IP${this.index}: ${@i.address}
+                masterDB-ID${this.index}: ${@i.id}
+                masterCP-ID${this.index}: ${@i.id}
+                storage-IP${this.index}: ${@i.address}
 
-    - forEach(response.nodes): 
+            - setup-DB-master:
+                nodeId: ${@i.id}
+                envName: ${this.envName}
+                index: ${this.index}
+
+    - if ('${settings.topology}'.toLowerCase() == 'cluster'):
+      - setGlobals: 
+          lsync-nodeGroup: storage
+          cdn-nodeGroup: bl
+          le-nodeGroup: bl
+          
+      - api: jelastic.env.control.GetEnvInfo
+        envName: ${this.envName}
+      - forEach(response.nodes):
         - if ('${@i.nodeGroup}' == 'storage'):
             - setGlobals: 
                 storage-IP${this.index}: ${@i.address}
@@ -182,10 +205,16 @@ actions:
                 masterDB-IP${this.index}: ${@i.address}
                 masterDB-ID${this.index}: ${@i.id}
 
-            - api: env.control.ExecCmdById
-              envName: ${this.envName}
-              nodeId: ${@i.id}
-              commandList:
+            - setup-DB-master:
+                nodeId: ${@i.id}
+                envName: ${this.envName}
+                index: ${this.index}
+ 
+  setup-DB-master:
+    - api: env.control.ExecCmdById
+      envName: ${this.envName}
+      nodeId: ${this.nodeId}
+      commandList:
                 - command: |-
                     wget https://raw.githubusercontent.com/jelastic-jps/mysql-cluster/master/configs/increment.cnf -O /etc/mysql/conf.d/increment.cnf
                     wget https://raw.githubusercontent.com/jelastic-jps/mysql-cluster/master/configs/master.cnf -O /etc/mysql/conf.d/master.cnf &>> /var/log/run.log
@@ -193,11 +222,10 @@ actions:
                     sed -i '/server-id.*/d' /etc/mysql/conf.d/master.cnf
                     sed -i '/binlog_format.*/d' /etc/mysql/conf.d/master.cnf
                     sudo /etc/init.d/mysql restart
-              
+ 
   setup-replication:
     - install: https://raw.githubusercontent.com/sych74/mysql-cluster/master/addons/regions-replication.jps?_r=${fn.random}
       envName: ${this.envName}
-      nodeGroup: sqldb
       settings:
         targetNodeID: ${globals.masterDB-ID0}
         remote_db_host: ${globals.masterDB-IP1}
@@ -211,7 +239,7 @@ actions:
   setup-synchronization:
     - install: https://raw.githubusercontent.com/dzotic9/file-sync/master/manifest.jps?_r=${fn.random}
       envName: ${this.envName}
-      nodeGroup: storage
+      nodeGroup: ${globals.lsync-nodeGroup}      
       settings:
         optional: two_envs
         address: ${globals.storage-IP1}
@@ -220,7 +248,7 @@ actions:
 
     - install: https://raw.githubusercontent.com/dzotic9/file-sync/master/manifest.jps?_r=${fn.random}
       envName: ${this.envName}-1
-      nodeGroup: storage
+      nodeGroup: ${globals.lsync-nodeGroup}
       settings:
         optional: two_envs
         address:  ${globals.storage-IP0}
@@ -232,7 +260,7 @@ actions:
       envName: ${this.envName}
     - install: ${baseUrl}/addon/cloudflare-DNS.jps?_r=${fn.random}
       envName: ${this.envName}
-      nodeGroup: bl
+      nodeGroup: ${globals.cdn-nodeGroup}
       settings:
         custom_domain: ${settings.customDomains}
         cf_email: ${settings.cf_email}
@@ -244,7 +272,7 @@ actions:
       envName: ${this.envName}
     - install: https://github.com/jelastic-jps/lets-encrypt/blob/master/manifest.jps?_r=${fn.random}
       envName: ${this.envName}
-      nodeGroup: bl
+      nodeGroup: ${globals.le-nodeGroup}
       settings:
         customDomains: ${settings.customDomains}
           
@@ -253,7 +281,7 @@ actions:
       envName: ${this.envName}
     - install: https://raw.githubusercontent.com/edgeport/cdn/master/manifest.yml?_r=${fn.random}
       envName: ${this.envName}
-      nodeGroup: bl
+      nodeGroup: ${globals.cdn-nodeGroup}
       settings:
         masterEnv: ${this.envName}
    
@@ -273,18 +301,17 @@ actions:
       settings:
         targetNodeID: ${globals.masterCP-ID0}
 
-    - install: 
-        jps: ${baseUrl}/scripts/install-WP.jps
-        envName: ${this.envName}
-        nodeGroup: cp
-        settings:
-          db_host: DB
-          db_user: ${globals.DB_USER}
-          db_pass: ${globals.DB_PASS}
-          wp_admin_passwd: ${globals.WP_ADMIN_PASSWD}"
-          wp_title: ${settings.wp_title}
-          wp_url: ${this.protocol}://${settings.customDomains}
-          targetNodeID: ${globals.masterCP-ID0}
+    - install: ${baseUrl}/scripts/install-WP.jps
+      envName: ${this.envName}
+      nodeGroup: cp
+      settings:
+        db_host: DB
+        db_user: ${globals.DB_USER}
+        db_pass: ${globals.DB_PASS}
+        wp_admin_pass: ${globals.WP_ADMIN_PASS}"
+        wp_title: ${settings.wp_title}
+        wp_url: ${env.url}
+        targetNodeID: ${globals.masterCP-ID0}
 
     - install: ${baseUrl}/scripts/WP-CACHE.jps
       settings:
@@ -293,4 +320,4 @@ actions:
         objectcache: true
         redis_host: REDIS
         redis_pass: ${globals.REDIS_PASS}
-        targetNodeID: ${nodes.cp.master.id}
+        targetNodeID: ${globals.masterCP-ID0}
