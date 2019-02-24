@@ -51,6 +51,7 @@ actions:
           wp w3-total-cache option set objectcache.redis.servers ${globals.REDIS_HOST}:6379 --path=${SERVER_WEBROOT}
           wp w3-total-cache option set objectcache.redis.password ${globals.REDIS_PASS} --path=${SERVER_WEBROOT}
     - if ('${globals.PLUGIN}'.toLowerCase() == 'lscwp'):
+        cmd[${globals.TgNodeID}]: |-
           wp lscache-admin set_option cache_object true --path=${SERVER_WEBROOT}
           wp lscache-admin set_option cache_object_kind true --path=${SERVER_WEBROOT}
           wp lscache-admin set_option cache_object_host 127.0.0.1 --path=${SERVER_WEBROOT}
