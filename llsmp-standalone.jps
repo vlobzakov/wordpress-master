@@ -38,8 +38,7 @@ onAfterScaleOut[nodeGroup:cp]:
   forEach(event.response.nodes):
     setNodeDisplayName [${@i.id}]: AppServer
 
-onInstall:  
-
+onInstall:
   - setGlobals:
       DB_USER: ${settings.db_user:jelastic-[fn.random]}
       DB_PASS: ${settings.db_pass:[fn.password(10)]}
@@ -47,56 +46,57 @@ onInstall:
       WP_INSTALL: ${settings.wp_install:true}
 
   - log: Set Node Display Name
-  - setNodeDisplayName [cp]: AppServer
+  - setNodeDisplayName [cp]: LEMP
+ 
+  - log: CP Layer Setup
+  - forEach(nodes.cp):
+      setupNode:
+        nodeId: "${@i.id}"
 
-  - setupCP
-  - deployWP
-  - installWP-CLI
+  - uploadDBConfig
   - createDBUser
-  - createDatabase
-  - setupWP
-  - setupLSCWP
 
+  - if ('${globals.WP_INSTALL}' == 'true'):
+    - log: Install WP-CLI
+    - install: ${baseUrl}/scripts/WP-CLI.jps
+      settings:
+        targetNodeID: ${nodes.cp.master.id}
+
+    - log: Download and Install latest WordPress release
+    - install: ${baseUrl}/scripts/install-WP.jps
+      settings:
+        db_host: 127.0.0.1
+        db_user: "${globals.DB_USER}"
+        db_pass: "${globals.DB_PASS}"
+        wp_admin_pass: "${globals.WP_ADMIN_PASS}"
+        wp_title: "${settings.wp_title}"
+        wp_url: "${env.url}"
+        targetNodeID: ${nodes.cp.master.id}
+        
+    - log: Cache setup
+    - install: ${baseUrl}/scripts/WP-CACHE.jps
+      settings:
+        plugin: lscwp
+        pgcache: true
+        objectcache: true
+        targetNodeID: ${nodes.cp.master.id}
   
 actions:
-  deployWP:
-    - deploy:
-       archive: https://wordpress.org/latest.tar.gz
-       name: WordPress-latest.tar.gz
-       context: ROOT
+  setupNode:
+    - cmd[${this.nodeId}]: |-
+       sed -i "s/root@localhost/${user.email}/g" /var/www/conf/httpd_config.xml
+       sudo jem service restart
     
-  installWP-CLI:
-    - cmd[cp]: curl -fsSL 'https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar' -o /usr/local/bin/wp && chmod +x /usr/local/bin/wp
-      user: root
-      
+  uploadDBConfig:
+    - cmd [cp]: |-
+        wget ${baseUrl}/configs/sqldb/wordpress.cnf -O /etc/mysql/conf.d/wordpress.cnf
+        chmod 664 /etc/mysql/conf.d/wordpress.cnf
+        jem service restart mysql
+    
   createDBUser:
     - cmd [cp]: |-
         wget https://raw.githubusercontent.com/jelastic-jps/mysql-cluster/master/scripts/setupUser.sh -O ~/setupUser.sh &>> /var/log/run.log
         bash ~/setupUser.sh ${globals.DB_USER} ${globals.DB_PASS} &>> /var/log/run.log
       user: root
           
-  createDatabase:
-    - cmd[cp]:
-        mysql -u${globals.DB_USER} -p${globals.DB_PASS} -e "CREATE DATABASE IF NOT EXISTS wordpress;"
-
-  setupWP:
-    cmd[cp]: |-
-        wp core config --dbhost=127.0.0.1 --dbname=wordpress --dbuser=${globals.DB_USER} --dbpass=${globals.DB_PASS} --path=${SERVER_WEBROOT}
-        wp --allow-root core install --title='' --admin_user=admin --admin_password=${globals.ADMIN_PASSWD} --url=${env.domain} --admin_email=${user.email} --path=${SERVER_WEBROOT}
-        wget https://raw.githubusercontent.com/jelastic-jps/wordpress-cluster/master/configs/wordpress/wp-jelastic.php -O ${SERVER_WEBROOT}/wp-jelastic.php
-        sed -i "s/.*'wp-settings.php';.*/require_once ABSPATH . 'wp-jelastic.php';\n&/" ${SERVER_WEBROOT}/wp-config.php    
-  
-  setupLSCWP:
-    - cmd[cp]: |-
-        wp plugin install litespeed-cache --path=${SERVER_WEBROOT}
-        wp plugin activate litespeed-cache --path=${SERVER_WEBROOT}
-        wget ${baseUrl}/configs/wordpress/LSCWP_localhost.cfg -O ~/LSCWP.cfg
-        wp lscache-admin import_options ~/LSCWP.cfg --path=${SERVER_WEBROOT}
-        wp cache flush --path=${SERVER_WEBROOT}
-        
-  setupCP:
-    - cmd[cp]: |-
-        sed -i "s/root@localhost/${user.email}/g" /var/www/conf/httpd_config.xml
-        sudo jem service restart
-        
 success: /text/success.md
