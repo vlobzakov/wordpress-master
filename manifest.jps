@@ -307,12 +307,6 @@ actions:
 
 
   install-wordpress:
-    - install: ${baseUrl}/scripts/WP-CLI.jps?_r=${fn.random}
-      envName: ${this.envName}
-      nodeGroup: cp
-      settings:
-        targetNodeID: ${globals.masterCP-ID0}
-
     - install: ${baseUrl}/scripts/install-WP.jps
       envName: ${this.envName}
       nodeGroup: cp
