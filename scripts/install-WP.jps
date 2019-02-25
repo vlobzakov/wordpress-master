@@ -13,6 +13,9 @@ globals:
   targetNodeID: "${settings.targetNodeID}"
 
 onInstall:
+  - cmd[${globals.targetNodeID}]:
+      curl -o /usr/local/bin/wp https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar && chmod +x /usr/local/bin/wp
+    user: root
   - cmd[${globals.targetNodeID}]: |-
       wget -qO- 'https://wordpress.org/latest.tar.gz' | tar xz -C /tmp && mv /tmp/wordpress/* ${SERVER_WEBROOT}
       mysql -u${globals.DB_USER} -p${globals.DB_PASS} -h ${globals.DB_HOST} -e "CREATE DATABASE IF NOT EXISTS ${globals.DB_NAME};"
