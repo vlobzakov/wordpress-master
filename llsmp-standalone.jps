@@ -85,8 +85,9 @@ onInstall:
 actions:
   setupNode:
     - cmd[${this.nodeId}]: |-
-       sed -i "s/root@localhost/${user.email}/g" /var/www/conf/httpd_config.xml
-       sudo jem service restart
+        rm -rf ${SERVER_WEBROOT}/*
+        sed -i "s/root@localhost/${user.email}/g" /var/www/conf/httpd_config.xml
+        sudo jem service restart
     
   uploadDBConfig:
     - cmd [cp]: |-
