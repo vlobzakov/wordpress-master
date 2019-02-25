@@ -272,14 +272,14 @@ actions:
       envName: ${settings.envName}
       nodeGroup: ${globals.cdn-nodeGroup}
       settings:
-        masterEnv: ${this.envName}
+        masterEnv: ${settings.envName}
    
   setup-CDN-WP:
     - script: return jelastic.dev.scripting.Eval("c05ffa5b45628a2a0c95467ebca8a0b4", session, "cdn.info", {partnerCode:1})
     - install: ${baseUrl}/addon/edgeport-CDN.jps?_r=${fn.random}
       envName: ${settings.envName}
       settings:
-        cdn_url: ${this.envName}-${response.response.partnerCode}
+        cdn_url: ${settings.envName}-${response.response.partnerCode}
 
   install-wordpress:
     - install: ${baseUrl}/scripts/install-WP.jps
