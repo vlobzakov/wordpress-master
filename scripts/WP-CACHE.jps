@@ -54,7 +54,7 @@ actions:
         cmd[${globals.TgNodeID}]: |-
           wp lscache-admin set_option cache_object true --path=${SERVER_WEBROOT}
           wp lscache-admin set_option cache_object_kind true --path=${SERVER_WEBROOT}
-          wp lscache-admin set_option cache_object_host 127.0.0.1 --path=${SERVER_WEBROOT}
+          wp lscache-admin set_option cache_object_host ${globals.REDIS_HOST} --path=${SERVER_WEBROOT}
           wp lscache-admin set_option cache_object_port 6379 --path=${SERVER_WEBROOT}
 
   edgeport-cdn:
@@ -63,3 +63,9 @@ actions:
           wp w3-total-cache option set cdn.enabled true --type=boolean --path=${SERVER_WEBROOT}
           wp w3-total-cache option set cdn.engine mirror --path=${SERVER_WEBROOT}
           wp w3-total-cache option set cdn.mirror.domain ${globals.CDN_URL} --path=${SERVER_WEBROOT}
+    - if ('${globals.PLUGIN}'.toLowerCase() == 'lscwp'):
+        cmd[${globals.TgNodeID}]: |-
+          wp lscache-admin set_option cdn true --path=${SERVER_WEBROOT}
+          wp lscache-admin set_option cdn_ori '//${env.domain}/' --path=${SERVER_WEBROOT}
+          
+          
