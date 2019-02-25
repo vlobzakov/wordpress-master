@@ -47,7 +47,7 @@ onInstall:
       WP_INSTALL: ${settings.wp_install:true}
 
   - log: Set Node Display Name
-  - setNodeDisplayName [cp]: LEMP
+  - setNodeDisplayName [cp]: LLSMP
  
   - log: CP Layer Setup
   - forEach(nodes.cp):
