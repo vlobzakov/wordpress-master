@@ -25,6 +25,7 @@ settings:
     
 nodes:
   - nodeType: llsmp-dockerized
+    extip: true
     tag: 5.3.5-php-7.3.0
     count: 1
     cloudlets: 8
