@@ -63,33 +63,6 @@ settings:
       regexText: Incorrect WP Title.
 
     - type: checkbox
-      name: cf-addon
-      caption: Registration on CloudFlare DNS. Public IP is required.
-      value: false
-
-    - type: string
-      name: customDomains
-      regex: "^([a-zA-Z0-9][a-zA-Z0-9-]{0,61}[a-zA-Z0-9]?(\\.[a-zA-Z0-9-]{1,}){1,6}[,|;]?){1,100}$"
-      caption: External Domain
-      default: .unigeocloud.com
-      required: false
-    - name: cf_email
-      caption: CF Email
-      type: string
-      default: ''
-      required: false
-    - name: cf_key
-      caption: CF KEY
-      type: string
-      default: ''
-      required: false
-    - name: cf_zone_id
-      caption: CF ZONE ID
-      type: string
-      default: ''
-      required: false
-
-    - type: checkbox
       name: le-addon
       caption: Install Let's Encrypt SSL Certificates. Public IP is required.
       value: false
@@ -106,6 +79,7 @@ globals:
   SYNC_PASS: ${fn.password(10)}
   PROTOCOL: http
   WP_ADMIN_PASS: "${fn.password(10)}"
+  MU_REGIONS: false
 
 onInstall:
   - if ('${settings.stack}'.toLowerCase() == 'lemp'):
@@ -119,6 +93,15 @@ onInstall:
   - script: |
       return { 
         result: 0, 
+        count_regions: '${settings.regions}'.split(',').length
+      }
+  - if ( '${response.count_regions}' == 2 ):
+      setGlobals:
+        MU_REGIONS: true
+
+  - script: |
+      return { 
+        result: 0, 
         regions: '${settings.regions}'.split(',')
       }
 
@@ -127,32 +110,25 @@ onInstall:
         envName: ${settings.envName}
         region: ${@i}
         index: ${@}
-        
-  - setup-replication:
-      envName: ${settings.envName}
 
-  - setup-synchronization:
-      envName: ${settings.envName}
+  - if ( ${globals.MU_REGIONS} ):
+    - setup-replication
+    - setup-synchronization
 
   - if (${settings.cf-addon:false}):         
-    - registration-on-CloudFlare:
-        envName: ${settings.envName}
+    - registration-on-CloudFlare
 
   - if (${settings.le-addon:false}):         
-    - install-LE-addon:
-        envName: ${settings.envName}
+    - install-LE-addon
     - setGlobals:
         PROTOCOL: https      
 
   - install-wordpress:
-      envName: ${settings.envName}
       protocol: ${globals.PROTOCOL}
 
   - if (${settings.cdn-addon:false}):    
-    - install-CDN_addon:
-        envName: ${settings.envName}
-    - setup-CDN-WP:
-        envName: ${settings.envName}
+    - install-CDN_addon
+    - setup-CDN-WP
 
 actions: 
   run:
@@ -195,10 +171,11 @@ actions:
                 masterCP-ID${this.index}: ${@i.id}
                 storage-IP${this.index}: ${@i.address}
 
-            - setup-DB-master:
-                nodeId: ${@i.id}
-                envName: ${this.envName}
-                index: ${this.index}
+            - if ( ${globals.MU_REGIONS} ):
+              - setup-DB-master:
+                  nodeId: ${@i.id}
+                  envName: ${this.envName}
+                  index: ${this.index}
 
     - if ('${settings.topology}'.toLowerCase() == 'cluster'):
       - setGlobals:
@@ -223,10 +200,11 @@ actions:
                 masterDB-IP${this.index}: ${@i.address}
                 masterDB-ID${this.index}: ${@i.id}
 
-            - setup-DB-master:
-                nodeId: ${@i.id}
-                envName: ${this.envName}
-                index: ${this.index}
+            - if ( ${globals.MU_REGIONS} ):
+              - setup-DB-master:
+                  nodeId: ${@i.id}
+                  envName: ${this.envName}
+                  index: ${this.index}
  
   setup-DB-master:
     - api: env.control.ExecCmdById
@@ -243,7 +221,7 @@ actions:
  
   setup-replication:
     - install: https://raw.githubusercontent.com/sych74/mysql-cluster/master/addons/regions-replication.jps?_r=${fn.random}
-      envName: ${this.envName}
+      envName: ${settings.envName}
       settings:
         targetNodeID: ${globals.masterDB-ID0}
         remote_db_host: ${globals.masterDB-IP1}
@@ -253,10 +231,9 @@ actions:
         local_db_user: ${globals.DB_USER}
         local_db_pass: ${globals.DB_PASS}
 
-
   setup-synchronization:
     - install: https://raw.githubusercontent.com/dzotic9/file-sync/master/manifest.jps?_r=${fn.random}
-      envName: ${this.envName}
+      envName: ${settings.envName}
       nodeGroup: ${globals.lsync-nodeGroup}      
       settings:
         optional: two_envs
@@ -265,7 +242,7 @@ actions:
         delay: 10
 
     - install: https://raw.githubusercontent.com/dzotic9/file-sync/master/manifest.jps?_r=${fn.random}
-      envName: ${this.envName}-1
+      envName: ${settings.envName}-1
       nodeGroup: ${globals.lsync-nodeGroup}
       settings:
         optional: two_envs
@@ -275,7 +252,7 @@ actions:
 
   registration-on-CloudFlare:
     - install: ${baseUrl}/addon/cloudflare-DNS.jps?_r=${fn.random}
-      envName: ${this.envName}
+      envName: ${settings.envName}
       nodeGroup: ${globals.cdn-nodeGroup}
       settings:
         custom_domain: ${settings.customDomains}
@@ -285,14 +262,14 @@ actions:
 
   install-LE-addon:
     - install: https://github.com/jelastic-jps/lets-encrypt/blob/master/manifest.jps?_r=${fn.random}
-      envName: ${this.envName}
+      envName: ${settings.envName}
       nodeGroup: ${globals.le-nodeGroup}
       settings:
         customDomains: ${settings.customDomains}
           
   install-CDN_addon:
     - install: https://raw.githubusercontent.com/edgeport/cdn/master/manifest.yml?_r=${fn.random}
-      envName: ${this.envName}
+      envName: ${settings.envName}
       nodeGroup: ${globals.cdn-nodeGroup}
       settings:
         masterEnv: ${this.envName}
@@ -300,16 +277,13 @@ actions:
   setup-CDN-WP:
     - script: return jelastic.dev.scripting.Eval("c05ffa5b45628a2a0c95467ebca8a0b4", session, "cdn.info", {partnerCode:1})
     - install: ${baseUrl}/addon/edgeport-CDN.jps?_r=${fn.random}
-      envName: ${this.envName}
-      nodeGroup: cp
+      envName: ${settings.envName}
       settings:
         cdn_url: ${this.envName}-${response.response.partnerCode}
 
-
   install-wordpress:
     - install: ${baseUrl}/scripts/install-WP.jps
-      envName: ${this.envName}
-      nodeGroup: cp
+      envName: ${settings.envName}
       settings:
         db_host: ${globals.DB_HOST}
         db_user: ${globals.DB_USER}
@@ -320,8 +294,7 @@ actions:
         targetNodeID: ${globals.masterCP-ID0}
 
     - install: ${baseUrl}/scripts/WP-CACHE.jps
-      envName: ${this.envName}
-      nodeGroup: cp
+      envName: ${settings.envName}
       settings:
         plugin: ${globals.WP_PLUGIN}
         pgcache: true
