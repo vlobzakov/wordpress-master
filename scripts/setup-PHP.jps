@@ -1,8 +1,20 @@
 jpsType: update
 name: PHP setup addon
 description: This addon for PHP configurations
-
-globals:
-  targetNodeID: "${settings.targetNodeID}"
+baseUrl: https://raw.githubusercontent.com/sych74/wordpress-master/master
 
 onInstall:
+  - if (/lemp/.test("${nodes.cp.nodeType}") || /nginxphp/.test("${nodes.cp.nodeType}")):
+      set: 
+        PHP_CONFIG_PATH: /etc/php.d
+
+  - if (/llsmp/.test("${nodes.cp.nodeType}") || /litespeed/.test("${nodes.cp.nodeType}")):
+      set: 
+        PHP_CONFIG_PATH: /usr/local/lsws/lsphp73/etc/php.d
+        
+  - cmd[cp]: |-
+      wget ${baseUrl}/configs/cp/php/wp-upload.ini -O ${this.PHP_CONFIG_PATH}/wp-upload.ini
+      wget ${baseUrl}/configs/cp/php/opcache.ini -O ${this.PHP_CONFIG_PATH}/opcache.ini
+      wget ${baseUrl}/configs/cp/php/extensions.ini -O ${this.PHP_CONFIG_PATH}/extensions.ini
+      wget ${baseUrl}/configs/cp/php/redis.ini -O ${this.PHP_CONFIG_PATH}/redis.ini
+      jem service restart
