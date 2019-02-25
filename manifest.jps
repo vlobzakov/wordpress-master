@@ -108,7 +108,6 @@ globals:
   WP_ADMIN_PASS: "${fn.password(10)}"
 
 onInstall:
-
   - if ('${settings.stack}'.toLowerCase() == 'lemp'):
       - setGlobals:
           WP_PLUGIN: w3tc
