@@ -271,9 +271,12 @@ actions:
    
   setup-CDN-WP:
     - script: return jelastic.dev.scripting.Eval("c05ffa5b45628a2a0c95467ebca8a0b4", session, "cdn.info", {partnerCode:1})
-    - install: ${baseUrl}/addon/edgeport-CDN.jps?_r=${fn.random}
+    - install: ${baseUrl}/scripts/WP-CACHE.jps
       envName: ${settings.envName}
       settings:
+        plugin: ${globals.WP_PLUGIN}
+        edgeport-cdn: true
+        targetNodeID: ${globals.masterCP-ID0}
         cdn_url: ${globals.PROTOCOL}://${settings.envName}-${response.response.partnerCode}.cdn.edgeport.net
         
   install-wordpress:
