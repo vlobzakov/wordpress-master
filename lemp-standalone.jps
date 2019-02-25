@@ -75,6 +75,7 @@ onInstall:
 actions:
   setupNode:
     - cmd[${this.nodeId}]: |-
+        rm -rf ${SERVER_WEBROOT}/*
         wget ${baseUrl}/configs/cp/nginx/nginx.conf -O /etc/nginx/nginx.conf
         wget ${baseUrl}/configs/cp/nginx/default.conf -O /etc/nginx/conf.d/default.conf
         wget ${baseUrl}/configs/cp/nginx/fastcgi_cache.conf -O /etc/nginx/conf.d/fastcgi_cache.conf
