@@ -23,7 +23,7 @@ settings:
 nodes:
   - nodeType: lemp-dockerized
     extip: true
-    tag: 1.14.2-mysql-8.0.13
+    tag: 1.14.2-mariadb-10.3
     count: 1
     cloudlets: 16
     nodeGroup: cp
@@ -49,11 +49,6 @@ onInstall:
   - createDBUser
 
   - if ('${globals.WP_INSTALL}' == 'true'):
-    - log: Install WP-CLI
-    - install: ${baseUrl}/scripts/WP-CLI.jps
-      settings:
-        targetNodeID: ${nodes.cp.master.id}
-
     - log: Download and Install latest WordPress release
     - install: ${baseUrl}/scripts/install-WP.jps
       settings:
@@ -70,6 +65,9 @@ onInstall:
       settings:
         plugin: w3tc
         pgcache: true
+        objectcache: true
+        redis_host: 127.0.0.1
+        redis_pass: 'abcABC123'
         targetNodeID: ${nodes.cp.master.id}
 
 actions:
