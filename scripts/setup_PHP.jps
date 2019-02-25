@@ -1,0 +1,8 @@
+jpsType: update
+name: PHP setup addon
+description: This addon for PHP configurations
+
+globals:
+  targetNodeID: "${settings.targetNodeID}"
+
+onInstall:
