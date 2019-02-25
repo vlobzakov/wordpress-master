@@ -274,7 +274,7 @@ actions:
     - install: ${baseUrl}/addon/edgeport-CDN.jps?_r=${fn.random}
       envName: ${settings.envName}
       settings:
-        cdn_url: ${env.envName}-${response.response.partnerCode}.cdn.edgeport.net
+        cdn_url: ${settings.envName}-${response.response.partnerCode}.cdn.edgeport.net
         
   install-wordpress:
     - install: ${baseUrl}/scripts/install-WP.jps
