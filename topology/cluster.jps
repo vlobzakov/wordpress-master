@@ -1,1 +1,139 @@
-test
+type: install
+version: '1.1'
+name: WordPress Cluster
+categories:
+  - apps/clusters
+  - apps/content-management
+description: Get your highly available and scalable clustered solution for WordPress,
+  the extremely popular open source CMS and blogging tool. This package is designed
+  to ensure the load tracking and distribution, as well as automatic adjusting the
+  amount of allocated resources according to it.
+logo: https://raw.githubusercontent.com/jelastic-jps/wordpress-cluster/master/images/wp-cluster.png
+
+globals:
+  StackNodeType: ${settings.StackNodeType}
+  StackTag: ${settings.StackTag}
+
+nodes:
+  - nodeType: nginx-dockerized
+    extip: true
+    tag: 1.14.2
+    count: 1
+    cloudlets: 16
+    nodeGroup: bl
+    volumes:
+      - "/var/lib/jelastic/SSL"
+    volumeMounts:
+      "/var/lib/jelastic/SSL":
+        readOnly: false
+        sourcePath: "/data/SSL"
+        sourceNodeGroup: storage
+    displayName: Load balancer
+
+  - nodeType: ${globals.StackNodeType}
+    tag: ${globals.StackTag}
+    count: 2
+    cloudlets: 16
+    nodeGroup: cp
+    displayName: AppServer
+    links:
+      - sqldb:DB
+      - nosqldb:REDIS
+    volumes:
+      - "/var/www/webroot/ROOT"
+    volumeMounts:
+      "/var/www/webroot/ROOT":
+        readOnly: false
+        sourcePath: "/data/ROOT"
+        sourceNodeGroup: storage
+    env:
+      SERVER_WEBROOT: /var/www/webroot/ROOT
+
+  - nodeType: mariadb-dockerized
+    tag: 10.3.11
+    count: 3
+    cloudlets: 8
+    nodeGroup: sqldb
+    displayName: Database
+    env:
+      ON_ENV_INSTALL: ''
+
+  - nodeType: storage
+    cloudlets: 8
+    nodeGroup: storage
+    displayName: Storage
+    
+  - nodeType: redis
+    count: 1
+    cloudlets: 8
+    nodeGroup: nosqldb
+
+onAfterScaleOut[nodeGroup:cp]:
+  forEach(event.response.nodes):
+    cmd [${@i.id}]: sudo service nginx reload
+    setNodeDisplayName [${@i.id}]: AppServer
+
+onAfterScaleOut[nodeGroup:bl]:
+  forEach(event.response.nodes):
+    setNodeDisplayName [${@i.id}]: Load balancer
+
+onAfterMigrate:
+  install: ${baseUrl}/addon/Domain.jps?_r=${fn.random}
+  envName: ${event.response.env.envName}
+  settings:
+    new_domain: ${event.response.env.domain}
+    
+onAfterClone:
+  install: ${baseUrl}/addon/Domain.jps?_r=${fn.random}
+  envName: ${event.response.env.envName}
+  settings:
+    new_domain: ${event.response.env.domain}
+
+onInstall:
+  - setGlobals:
+      DB_USER: ${settings.db_user:jelastic-[fn.random]}
+      DB_PASS: ${settings.db_pass:[fn.password(10)]}
+      REDIS_PASS: ${settings.redis_pass:[fn.password(10)]}
+
+  - log: Auto Scaling Triggers
+  - script: "${baseUrl}/scripts/addTriggers.js"
+
+  - log: Set Node Display Name
+  - setNodeDisplayName [bl]: Load balancer
+  - setNodeDisplayName [cp]: AppServer
+  - setNodeDisplayName [nosqldb]: ObjectCache
+  - setNodeDisplayName [storage]: Storage
+
+  - log: DB Galera  Setup
+  - install: https://raw.githubusercontent.com/sych74/mysql-cluster/master/scripts/galera-configuration.jps
+    settings:
+      db_user: "${globals.DB_USER}"
+      db_pass: "${globals.DB_PASS}"
+      custom_conf: "${baseUrl}/configs/sqldb/wordpress.cnf"
+    nodeGroup: sqldb
+
+  - log: NoSQL Layer Setup
+  - setupRedis
+
+  - log: CP Layer Setup
+  - forEach(nodes.cp):
+      setupNode:
+        nodeId: "${@i.id}"
+
+actions:
+  setupNode:
+  - cmd[${this.nodeId}]: |-
+      wget ${baseUrl}/configs/cp/nginx/nginx.conf -O /etc/nginx/nginx.conf
+      wget ${baseUrl}/configs/cp/nginx/default.conf -O /etc/nginx/conf.d/default.conf
+      wget ${baseUrl}/configs/cp/nginx/fastcgi_cache.conf -O /etc/nginx/conf.d/fastcgi_cache.conf
+      wget ${baseUrl}/configs/cp/php/wp-upload.ini -O /etc/php.d/wp-upload.ini
+      wget ${baseUrl}/configs/cp/php/opcache.ini -O /etc/php.d/opcache.ini
+      wget ${baseUrl}/configs/cp/php/extensions.ini -O /etc/php.d/extensions.ini
+      wget ${baseUrl}/configs/cp/php/redis.ini -O /etc/php.d/redis.ini
+      sed -i "s/_REDIS_PASSWD_/${globals.REDIS_PASS}/" /etc/php.d/redis.ini
+      sudo service nginx restart
+      
+  setupRedis:
+    - cmd [nosqldb]: jem passwd set -p ${globals.REDIS_PASS}
+      user: root
+        
