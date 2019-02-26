@@ -62,16 +62,6 @@ settings:
       regex: "^[\\w-.]*$"
       regexText: Incorrect WP Title.
 
-    - type: checkbox
-      name: le-addon
-      caption: Install Let's Encrypt SSL Certificates. Public IP is required.
-      value: false
-      
-    - type: checkbox
-      name: cdn-addon
-      caption: Install Edgeport HTTP/3 Premium CDN  
-      value: false
-
 globals:
   DB_USER: jelastic-${fn.random}
   DB_PASS: ${fn.password(10)}
@@ -102,7 +92,7 @@ onInstall:
 
   - if ('${settings.stack}'.toLowerCase() == 'llsmp' && '${settings.topology}'.toLowerCase() == 'cluster'):
       - setGlobals:
-          StackNodeType: litespeedphp-dockerized
+          StackNodeType: litespeedphp
           StackTag: 5.3.5-php-7.3.0
           WP_PLUGIN: lscwp
 
@@ -143,8 +133,7 @@ onInstall:
       protocol: ${globals.PROTOCOL}
 
   - if (${settings.cdn-addon:false}):    
-    - install-CDN_addon
-    - setup-CDN-WP
+    - install-edgeport-CDN
 
 actions: 
   run:
@@ -229,13 +218,13 @@ actions:
       envName: ${this.envName}
       nodeId: ${this.nodeId}
       commandList:
-                - command: |-
-                    wget https://raw.githubusercontent.com/jelastic-jps/mysql-cluster/master/configs/increment.cnf -O /etc/mysql/conf.d/increment.cnf
-                    wget https://raw.githubusercontent.com/jelastic-jps/mysql-cluster/master/configs/master.cnf -O /etc/mysql/conf.d/master.cnf &>> /var/log/run.log
-                    sed -i "s/auto-increment-offset.*/auto-increment-offset = $((${this.index} + 1))/" /etc/mysql/conf.d/increment.cnf
-                    sed -i '/server-id.*/d' /etc/mysql/conf.d/master.cnf
-                    sed -i '/binlog_format.*/d' /etc/mysql/conf.d/master.cnf
-                    sudo /etc/init.d/mysql restart
+        - command: |-
+            wget https://raw.githubusercontent.com/jelastic-jps/mysql-cluster/master/configs/increment.cnf -O /etc/mysql/conf.d/increment.cnf
+            wget https://raw.githubusercontent.com/jelastic-jps/mysql-cluster/master/configs/master.cnf -O /etc/mysql/conf.d/master.cnf &>> /var/log/run.log
+            sed -i "s/auto-increment-offset.*/auto-increment-offset = $((${this.index} + 1))/" /etc/mysql/conf.d/increment.cnf
+            sed -i '/server-id.*/d' /etc/mysql/conf.d/master.cnf
+            sed -i '/binlog_format.*/d' /etc/mysql/conf.d/master.cnf
+            sudo /etc/init.d/mysql restart
  
   setup-replication:
     - install: https://raw.githubusercontent.com/sych74/mysql-cluster/master/addons/regions-replication.jps?_r=${fn.random}
@@ -283,11 +272,9 @@ actions:
       envName: ${settings.envName}
       nodeGroup: ${globals.le-nodeGroup}
           
-  install-CDN_addon:
+  install-edgeport-CDN:
     - install: https://raw.githubusercontent.com/edgeport/cdn/master/manifest.yml?_r=${fn.random}
       envName: ${settings.envName}
-   
-  setup-CDN-WP:
     - script: return jelastic.dev.scripting.Eval("c05ffa5b45628a2a0c95467ebca8a0b4", session, "cdn.info", {partnerCode:1})
     - install: ${baseUrl}/scripts/WP-CACHE.jps
       envName: ${settings.envName}
@@ -298,8 +285,6 @@ actions:
         cdn_url: ${globals.PROTOCOL}://${settings.envName}-${response.response.partnerCode}.cdn.edgeport.net
         
   install-wordpress:
-    - api: jelastic.env.control.GetEnvInfo
-      envName: ${settings.envName}
     - install: ${baseUrl}/scripts/install-WP.jps
       envName: ${settings.envName}
       settings:
