@@ -82,12 +82,28 @@ globals:
   MU_REGIONS: false
 
 onInstall:
-  - if ('${settings.stack}'.toLowerCase() == 'lemp'):
+  - if ('${settings.stack}'.toLowerCase() == 'lemp' && '${settings.topology}'.toLowerCase() == 'standalone'):
       - setGlobals:
+          StackNodeType: lemp-dockerized
+          StackTag: 1.14.2-mariadb-10.3
           WP_PLUGIN: w3tc
 
-  - if ('${settings.topology}'.toLowerCase() == 'llsmp'):
+  - if ('${settings.stack}'.toLowerCase() == 'lemp' && '${settings.topology}'.toLowerCase() == 'cluster'):
       - setGlobals:
+          StackNodeType: nginxphp-dockerized
+          StackTag: 1.14.2-php-7.3.1
+          WP_PLUGIN: w3tc
+
+  - if ('${settings.stack}'.toLowerCase() == 'llsmp' && '${settings.topology}'.toLowerCase() == 'standalone'):
+      - setGlobals:
+          StackNodeType: llsmp-dockerized
+          StackTag: 5.3.5-php-7.3.0
+          WP_PLUGIN: lscwp
+
+  - if ('${settings.stack}'.toLowerCase() == 'llsmp' && '${settings.topology}'.toLowerCase() == 'cluster'):
+      - setGlobals:
+          StackNodeType: litespeedphp-dockerized
+          StackTag: 5.3.5-php-7.3.0
           WP_PLUGIN: lscwp
 
   - script: |
@@ -145,14 +161,15 @@ actions:
   
   setup-cluster:
     - script: return {result:0, envGroups:eval('(' + MANIFEST + ')').envGroups}
-    - install: ${baseUrl}/${settings.stack}-${settings.topology}.jps?_r=${fn.random}
+    - install: ${baseUrl}/topology/${settings.topology}.jps?_r=${fn.random}
       envName: ${this.envName}
       envGroups: ${response.envGroups}
       region: ${this.region}
       settings:
+        StackNodeType: ${globals.StackNodeType}
+        StackTag: ${globals.StackTag}
         db_user: ${globals.DB_USER}
         db_pass: ${globals.DB_PASS}
-        wp_install: false
 
     - if ('${settings.topology}'.toLowerCase() == 'standalone'):
       - setGlobals:
