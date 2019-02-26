@@ -1,0 +1,32 @@
+jpsType: update
+name: CP setup script
+description: This script for AppServer configurations
+
+globals:
+  REDIS_PASS: ${settings.redis_pass}
+
+onInstall:
+  - if (/lemp/.test("${nodes.cp.nodeType}") || /nginxphp/.test("${nodes.cp.nodeType}")):
+      - nginx
+      - redis: 
+         PHP_CONFIG_PATH: /etc/php.d
+
+  - if (/llsmp/.test("${nodes.cp.nodeType}") || /litespeed/.test("${nodes.cp.nodeType}")):
+      - redis: 
+         PHP_CONFIG_PATH: /usr/local/lsws/lsphp73/etc/php.d
+
+actions:
+  redis:
+    - cmd[cp]: |-
+        wget ${baseUrl}../configs/cp/php/wp-upload.ini -O ${this.PHP_CONFIG_PATH}/wp-upload.ini
+        wget ${baseUrl}../configs/cp/php/opcache.ini -O ${this.PHP_CONFIG_PATH}/opcache.ini
+        wget ${baseUrl}../configs/cp/php/extensions.ini -O ${this.PHP_CONFIG_PATH}/extensions.ini
+        wget ${baseUrl}../configs/cp/php/redis.ini -O ${this.PHP_CONFIG_PATH}/redis.ini
+        sed -i "s/_REDIS_PASSWD_/${globals.REDIS_PASS}/" ${this.PHP_CONFIG_PATH}/redis.ini
+        jem service restart
+
+  nginx:
+    - cmd[cp]: |-
+        wget ${baseUrl}../configs/cp/nginx/nginx.conf -O /etc/nginx/nginx.conf
+        wget ${baseUrl}../configs/cp/nginx/default.conf -O /etc/nginx/conf.d/default.conf
+        wget ${baseUrl}../configs/cp/nginx/fastcgi_cache.conf -O /etc/nginx/conf.d/fastcgi_cache.conf
