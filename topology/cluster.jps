@@ -21,6 +21,7 @@ nodes:
     count: 1
     cloudlets: 16
     nodeGroup: bl
+    scalingMode: STATEFUL
     volumes:
       - "/var/lib/jelastic/SSL"
     volumeMounts:
@@ -113,36 +114,14 @@ onInstall:
       custom_conf: "${baseUrl}../configs/sqldb/wordpress.cnf"
     nodeGroup: sqldb
 
-  - setupLB  
-  - setupRedis
+  - log: Load Balancer Setup
+  - install: ${baseUrl}../scripts/setup-BL.jps?_r=${fn.random}
 
-  - log: CP Layer Setup
-  - forEach(nodes.cp):
-      setupNode:
-        nodeId: "${@i.id}"
+  - log: Redis Setup
+  - cmd [nosqldb]: jem passwd set -p ${globals.REDIS_PASS}
+    user: root
 
-actions:
-
-  setupLB:
-    - cmd[bl]: |-
-        sed -i "s/$(cat /etc/nginx/nginx.conf|grep worker_rlimit_nofile)/worker_rlimit_nofile 409060;/" /etc/nginx/nginx.conf
-        sed -i "s/$(cat /etc/nginx/nginx.conf|grep worker_connections)/worker_connections 18192;/" /etc/nginx/nginx.conf
-        wget ${baseUrl}../configs/nginx/nginx.conf.tpl -O /etc/nginx/templates/nginx.conf.tpl &>> /var/log/run.log
-        rm -f /etc/nginx/nginx-jelastic.conf; jem balancer rebuildCommon
-      user: root
-
-  setupCP:
-    - if (/lemp/.test("${nodes.cp.nodeType}") || /nginxphp/.test("${nodes.cp.nodeType}")):
-      - cmd[${this.nodeId}]: |-
-          wget ${baseUrl}../configs/cp/nginx/nginx.conf -O /etc/nginx/nginx.conf
-          wget ${baseUrl}../configs/cp/nginx/default.conf -O /etc/nginx/conf.d/default.conf
-          wget ${baseUrl}../configs/cp/nginx/fastcgi_cache.conf -O /etc/nginx/conf.d/fastcgi_cache.conf
-          sudo service nginx restart
-
-      - if (/llsmp/.test("${nodes.cp.nodeType}") || /litespeed/.test("${nodes.cp.nodeType}")):
-        - cmd[${this.nodeId}]: |-
-
-  setupRedis:
-    - cmd [nosqldb]: jem passwd set -p ${globals.REDIS_PASS}
-      user: root
-        
+  - log: App Servers Setup
+  - install: ${baseUrl}../scripts/setup-CP.jps?_r=${fn.random}
+    settings:
+      redis_pass: ${globals.REDIS_PASS}
