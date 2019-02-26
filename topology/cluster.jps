@@ -1,14 +1,6 @@
-type: install
-version: '1.1'
-name: WordPress Cluster
-categories:
-  - apps/clusters
-  - apps/content-management
-description: Get your highly available and scalable clustered solution for WordPress,
-  the extremely popular open source CMS and blogging tool. This package is designed
-  to ensure the load tracking and distribution, as well as automatic adjusting the
-  amount of allocated resources according to it.
-logo: https://raw.githubusercontent.com/jelastic-jps/wordpress-cluster/master/images/wp-cluster.png
+jpsType: install
+jpsVersion: '1.1'
+name: Wordpress Cluster
 
 globals:
   StackNodeType: ${settings.StackNodeType}
