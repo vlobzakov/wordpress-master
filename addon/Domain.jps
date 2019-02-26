@@ -5,23 +5,12 @@ description: Addon for domain replace
 logo: https://raw.githubusercontent.com/jelastic-jps/wordpress-cluster/master/images/wp-cluster.png
 settings:
     fields:
-    - name: old_domain
-      caption: Old Domain
-      type: string
-      default: ""
-      required: false
     - name: new_domain
       caption: New Domain
       type: string
       default: ""
       required: true
-
 onInstall:
-  if (/old_domain/.test("${settings.old_domain}")):
-    - cmd[${nodes.cp.master.id}]: 
-        wp option get siteurl --path=/var/www/webroot/ROOT
-    - cmd[${nodes.cp.master.id}]: 
-        wp search-replace '${response.responses.out}' '${settings.new_domain}' --skip-columns=guid --all-tables --path=/var/www/webroot/ROOT
-  if (!/old_domain/.test("${settings.old_domain}")):
-    - cmd[${nodes.cp.master.id}]: 
-        wp search-replace '${settings.old_domain}' '${settings.new_domain}' --skip-columns=guid --all-tables --path=/var/www/webroot/ROOT
+    - cmd[${nodes.cp.master.id}]: |-
+        wp option get siteurl --path=${SERVER_WEBROOT}
+        wp search-replace '${response.responses.out}' '${settings.new_domain}' --skip-columns=guid --all-tables --path=${SERVER_WEBROOT}
