@@ -2,7 +2,6 @@ jpsType: update
 jpsVersion: '1.1'
 name: Addon for domain replace
 description: Addon for domain replace
-logo: https://raw.githubusercontent.com/jelastic-jps/wordpress-cluster/master/images/wp-cluster.png
 settings:
     fields:
     - name: new_domain
