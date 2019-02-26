@@ -170,6 +170,7 @@ actions:
         StackTag: ${globals.StackTag}
         db_user: ${globals.DB_USER}
         db_pass: ${globals.DB_PASS}
+        redis_pass: ${globals.REDIS_PASS}
 
     - if ('${settings.topology}'.toLowerCase() == 'standalone'):
       - setGlobals:
@@ -319,3 +320,5 @@ actions:
         redis_host: REDIS
         redis_pass: ${globals.REDIS_PASS}
         targetNodeID: ${globals.masterCP-ID0}
+
+success: /text/success.md
