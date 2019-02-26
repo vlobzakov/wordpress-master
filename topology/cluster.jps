@@ -109,7 +109,7 @@ onInstall:
     settings:
       db_user: "${globals.DB_USER}"
       db_pass: "${globals.DB_PASS}"
-      custom_conf: "${baseUrl}/configs/sqldb/wordpress.cnf"
+      custom_conf: "${baseUrl}../configs/sqldb/wordpress.cnf"
     nodeGroup: sqldb
 
   - log: NoSQL Layer Setup
@@ -123,13 +123,13 @@ onInstall:
 actions:
   setupNode:
   - cmd[${this.nodeId}]: |-
-      wget ${baseUrl}/configs/cp/nginx/nginx.conf -O /etc/nginx/nginx.conf
-      wget ${baseUrl}/configs/cp/nginx/default.conf -O /etc/nginx/conf.d/default.conf
-      wget ${baseUrl}/configs/cp/nginx/fastcgi_cache.conf -O /etc/nginx/conf.d/fastcgi_cache.conf
-      wget ${baseUrl}/configs/cp/php/wp-upload.ini -O /etc/php.d/wp-upload.ini
-      wget ${baseUrl}/configs/cp/php/opcache.ini -O /etc/php.d/opcache.ini
-      wget ${baseUrl}/configs/cp/php/extensions.ini -O /etc/php.d/extensions.ini
-      wget ${baseUrl}/configs/cp/php/redis.ini -O /etc/php.d/redis.ini
+      wget ${baseUrl}../configs/cp/nginx/nginx.conf -O /etc/nginx/nginx.conf
+      wget ${baseUrl}../configs/cp/nginx/default.conf -O /etc/nginx/conf.d/default.conf
+      wget ${baseUrl}../configs/cp/nginx/fastcgi_cache.conf -O /etc/nginx/conf.d/fastcgi_cache.conf
+      wget ${baseUrl}../configs/cp/php/wp-upload.ini -O /etc/php.d/wp-upload.ini
+      wget ${baseUrl}../configs/cp/php/opcache.ini -O /etc/php.d/opcache.ini
+      wget ${baseUrl}../configs/cp/php/extensions.ini -O /etc/php.d/extensions.ini
+      wget ${baseUrl}../configs/cp/php/redis.ini -O /etc/php.d/redis.ini
       sed -i "s/_REDIS_PASSWD_/${globals.REDIS_PASS}/" /etc/php.d/redis.ini
       sudo service nginx restart
       
