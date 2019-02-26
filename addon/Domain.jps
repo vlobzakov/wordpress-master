@@ -11,6 +11,7 @@ settings:
       default: ""
       required: true
 onInstall:
-    - cmd[${nodes.cp.master.id}]: |-
-        wp option get siteurl --path=${SERVER_WEBROOT}
-        wp search-replace '${response.responses.out}' '${settings.new_domain}' --skip-columns=guid --all-tables --path=${SERVER_WEBROOT}
+    - cmd[${nodes.cp.master.id}]:
+        wp option get siteurl --path=/var/www/webroot/ROOT
+    - cmd[${nodes.cp.master.id}]:
+        wp search-replace '${response.responses.out}' '${settings.new_domain}' --skip-columns=guid --all-tables --path=/var/www/webroot/ROOT
