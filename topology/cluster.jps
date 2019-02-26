@@ -33,8 +33,9 @@ nodes:
   - nodeType: ${globals.StackNodeType}
     tag: ${globals.StackTag}
     count: 2
-    cloudlets: 16
+    cloudlets: 8
     nodeGroup: cp
+    scalingMode: STATEFUL
     displayName: AppServer
     links:
       - sqldb:DB
@@ -112,7 +113,7 @@ onInstall:
       custom_conf: "${baseUrl}../configs/sqldb/wordpress.cnf"
     nodeGroup: sqldb
 
-  - log: NoSQL Layer Setup
+  - setupLB  
   - setupRedis
 
   - log: CP Layer Setup
@@ -121,18 +122,26 @@ onInstall:
         nodeId: "${@i.id}"
 
 actions:
-  setupNode:
-  - cmd[${this.nodeId}]: |-
-      wget ${baseUrl}../configs/cp/nginx/nginx.conf -O /etc/nginx/nginx.conf
-      wget ${baseUrl}../configs/cp/nginx/default.conf -O /etc/nginx/conf.d/default.conf
-      wget ${baseUrl}../configs/cp/nginx/fastcgi_cache.conf -O /etc/nginx/conf.d/fastcgi_cache.conf
-      wget ${baseUrl}../configs/cp/php/wp-upload.ini -O /etc/php.d/wp-upload.ini
-      wget ${baseUrl}../configs/cp/php/opcache.ini -O /etc/php.d/opcache.ini
-      wget ${baseUrl}../configs/cp/php/extensions.ini -O /etc/php.d/extensions.ini
-      wget ${baseUrl}../configs/cp/php/redis.ini -O /etc/php.d/redis.ini
-      sed -i "s/_REDIS_PASSWD_/${globals.REDIS_PASS}/" /etc/php.d/redis.ini
-      sudo service nginx restart
-      
+
+  setupLB:
+    - cmd[bl]: |-
+        sed -i "s/$(cat /etc/nginx/nginx.conf|grep worker_rlimit_nofile)/worker_rlimit_nofile 409060;/" /etc/nginx/nginx.conf
+        sed -i "s/$(cat /etc/nginx/nginx.conf|grep worker_connections)/worker_connections 18192;/" /etc/nginx/nginx.conf
+        wget ${baseUrl}../configs/nginx/nginx.conf.tpl -O /etc/nginx/templates/nginx.conf.tpl &>> /var/log/run.log
+        rm -f /etc/nginx/nginx-jelastic.conf; jem balancer rebuildCommon
+      user: root
+
+  setupCP:
+    - if (/lemp/.test("${nodes.cp.nodeType}") || /nginxphp/.test("${nodes.cp.nodeType}")):
+      - cmd[${this.nodeId}]: |-
+          wget ${baseUrl}../configs/cp/nginx/nginx.conf -O /etc/nginx/nginx.conf
+          wget ${baseUrl}../configs/cp/nginx/default.conf -O /etc/nginx/conf.d/default.conf
+          wget ${baseUrl}../configs/cp/nginx/fastcgi_cache.conf -O /etc/nginx/conf.d/fastcgi_cache.conf
+          sudo service nginx restart
+
+      - if (/llsmp/.test("${nodes.cp.nodeType}") || /litespeed/.test("${nodes.cp.nodeType}")):
+        - cmd[${this.nodeId}]: |-
+
   setupRedis:
     - cmd [nosqldb]: jem passwd set -p ${globals.REDIS_PASS}
       user: root
