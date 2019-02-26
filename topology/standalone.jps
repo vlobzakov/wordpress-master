@@ -1,1 +1,65 @@
-test
+jpsType: install
+jpsVersion: '1.1'
+id: wordpress
+name: Wordpress
+categories:
+  - apps/blogs
+  - apps/content-management
+logo: https://raw.githubusercontent.com/jelastic-jps/wordpress/master/images/wp.png
+homepage: http://wordpress.org/
+description: WordPress is web software you can use to create a beautiful website or blog. We like to say that WordPress is both free and priceless at the same time.
+
+globals:
+  StackNodeType: ${settings.StackNodeType}
+  StackTag: ${settings.StackTag}
+
+nodes:
+  - nodeType: ${globals.StackNodeType}
+    tag: ${globals.StackTag}
+    extip: true
+    count: 1
+    cloudlets: 16
+    nodeGroup: cp
+    env:
+      SERVER_WEBROOT: /var/www/webroot/ROOT
+  
+onInstall:
+  - setGlobals:
+      DB_USER: ${settings.db_user:jelastic-[fn.random]}
+      DB_PASS: ${settings.db_pass:[fn.password(10)]}
+
+  - log: Set Node Display Name
+  - setNodeDisplayName [cp]: AppServer
+ 
+  - log: CP Layer Setup
+  - forEach(nodes.cp):
+      setupNode:
+        nodeId: "${@i.id}"
+
+  - uploadDBConfig
+  - createDBUser
+
+actions:
+  setupNode:
+    - cmd[${this.nodeId}]: |-
+        rm -rf ${SERVER_WEBROOT}/*
+        wget ${baseUrl}/configs/cp/nginx/nginx.conf -O /etc/nginx/nginx.conf
+        wget ${baseUrl}/configs/cp/nginx/default.conf -O /etc/nginx/conf.d/default.conf
+        wget ${baseUrl}/configs/cp/nginx/fastcgi_cache.conf -O /etc/nginx/conf.d/fastcgi_cache.conf
+        wget ${baseUrl}/configs/cp/php/wp-upload.ini -O /etc/php.d/wp-upload.ini
+        wget ${baseUrl}/configs/cp/php/opcache.ini -O /etc/php.d/opcache.ini
+        wget ${baseUrl}/configs/cp/php/extensions.ini -O /etc/php.d/extensions.ini
+        jem service restart nginx
+    
+  uploadDBConfig:
+    - cmd [cp]: |-
+        wget ${baseUrl}/configs/sqldb/wordpress.cnf -O /etc/mysql/conf.d/wordpress.cnf
+        chmod 664 /etc/mysql/conf.d/wordpress.cnf
+        jem service restart mysql
+    
+  createDBUser:
+    - cmd [cp]: |-
+        sed -i "s/server-id.*/server-id = ${nodes.cp.master.id}/" /etc/my.cnf
+        wget https://raw.githubusercontent.com/jelastic-jps/mysql-cluster/master/scripts/setupUser.sh -O ~/setupUser.sh &>> /var/log/run.log
+        bash ~/setupUser.sh ${globals.DB_USER} ${globals.DB_PASS} &>> /var/log/run.log
+      user: root
