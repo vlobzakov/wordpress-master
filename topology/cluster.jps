@@ -78,13 +78,13 @@ onAfterScaleOut[nodeGroup:bl]:
     setNodeDisplayName [${@i.id}]: Load balancer
 
 onAfterMigrate:
-  install: ${baseUrl}/addon/Domain.jps?_r=${fn.random}
+  install: ${baseUrl}../addon/Domain.jps?_r=${fn.random}
   envName: ${event.response.env.envName}
   settings:
     new_domain: ${event.response.env.domain}
     
 onAfterClone:
-  install: ${baseUrl}/addon/Domain.jps?_r=${fn.random}
+  install: ${baseUrl}../addon/Domain.jps?_r=${fn.random}
   envName: ${event.response.env.envName}
   settings:
     new_domain: ${event.response.env.domain}
@@ -96,7 +96,7 @@ onInstall:
       REDIS_PASS: ${settings.redis_pass:[fn.password(10)]}
 
   - log: Auto Scaling Triggers
-  - script: "${baseUrl}/scripts/addTriggers.js"
+  - script: "${baseUrl}../scripts/addTriggers.js"
 
   - log: Set Node Display Name
   - setNodeDisplayName [bl]: Load balancer
