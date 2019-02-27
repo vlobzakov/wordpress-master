@@ -78,6 +78,7 @@ elif [[ $(echo $_wpcache |awk '{print $1}') == 'w3-total-cache' && $(echo $_wpca
         WPCACHE="w3tc";
 else
         echo 'W3Total or Litespeed-cache is not supported';
+	exit;
 fi
 
 if [ $pgcache == 'true' ] ; then
