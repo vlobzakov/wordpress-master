@@ -70,7 +70,7 @@ W3TC_OPTION_SET="wp w3-total-cache option set"
 LSCWP_OPTION_SET="wp lscache-admin set_option"
 lOG="/var/log/run.log"
 
-_wpcache=$(wp plugin list --path=${SERVER_WEBROOT} | grep litespeed-cache)
+_wpcache=$(wp plugin list --path=${SERVER_WEBROOT} | grep cache)
 
 if [[ $(echo $_wpcache |awk '{print $1}') == 'litespeed-cache' && $(echo $_wpcache |awk '{print $2}') == 'active' ]] ; then
         WPCACHE='lscwp';
