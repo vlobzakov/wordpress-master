@@ -15,6 +15,5 @@ globals:
 
 onInstall:
   - cmd[${nodes.cp.master.id}]: |-
-      wp w3-total-cache option set cdn.enabled true --type=boolean --path=${SERVER_WEBROOT}
-      wp w3-total-cache option set cdn.engine mirror --path=${SERVER_WEBROOT}
-      wp w3-total-cache option set cdn.mirror.domain ${globals.CDN_URL} --path=${SERVER_WEBROOT}
+      wget ${baseUrl}../scripts/WPCache.sh -O ~/WPCache.sh &>> /var/log/run.log
+      bash ~/WPCache.sh --edgeportCDN true --CDN_URL ${globals.CDN_URL} --CDN_ORI ${env.domain} &>> /var/log/run.log
