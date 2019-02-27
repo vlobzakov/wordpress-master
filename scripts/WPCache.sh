@@ -70,14 +70,15 @@ W3TC_OPTION_SET="wp w3-total-cache option set"
 LSCWP_OPTION_SET="wp lscache-admin set_option"
 lOG="/var/log/run.log"
 
-_wpcache=$(wp plugin list --path=${SERVER_WEBROOT} | grep cache)
 
-if [[ $(echo $_wpcache |awk '{print $1}') == 'litespeed-cache' && $(echo $_wpcache |awk '{print $2}') == 'active' ]] ; then
+if [[ ${COMPUTE_TYPE} == *"llsmp"* || ${COMPUTE_TYPE} == *"litespeed"* ]] ; then
+	wp plugin install litespeed-cache --activate --path=${SERVER_WEBROOT}
         WPCACHE='lscwp';
-elif [[ $(echo $_wpcache |awk '{print $1}') == 'w3-total-cache' && $(echo $_wpcache |awk '{print $2}') == 'active' ]] ; then
+elif [[ ${COMPUTE_TYPE} == *"lemp"* || ${COMPUTE_TYPE} == *"nginxphp"* ]] ; then
+	wp plugin install w3-total-cache --activate --path=${SERVER_WEBROOT}
         WPCACHE="w3tc";
 else
-        echo 'W3Total or Litespeed-cache is not supported';
+        echo 'Compute type is not defined';
 	exit;
 fi
 
