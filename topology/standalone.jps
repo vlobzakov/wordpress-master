@@ -26,7 +26,7 @@ onInstall:
   - setNodeDisplayName [cp]: AppServer
 
   - log: Clean Webroot Directory
-  - cmd[cp]: rm -rf ${SERVER_WEBROOT}
+  - cmd[cp]: rm -rf ${SERVER_WEBROOT}/*
   
   - log: DB Setup
   - cmd[cp]: wget ${baseUrl}../configs/sqldb/wordpress.cnf -O /etc/mysql/conf.d/wordpress.cnf
