@@ -72,8 +72,6 @@ lOG="/var/log/run.log"
 
 _wpcache=$(wp plugin list --path=${SERVER_WEBROOT} | grep litespeed-cache)
 
-echo "--------- $_wpcache"
-
 if [[ $(echo $_wpcache |awk '{print $1}') == 'litespeed-cache' && $(echo $_wpcache |awk '{print $2}') == 'active' ]] ; then
         WPCACHE='lscwp';
 elif [[ $(echo $_wpcache |awk '{print $1}') == 'w3-total-cache' && $(echo $_wpcache |awk '{print $2}') == 'active' ]] ; then
@@ -81,8 +79,6 @@ elif [[ $(echo $_wpcache |awk '{print $1}') == 'w3-total-cache' && $(echo $_wpca
 else
         echo 'W3Total or Litespeed-cache is not supported';
 fi
-
-
 
 if [ $pgcache == 'true' ] ; then
   case $WPCACHE in
