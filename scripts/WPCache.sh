@@ -11,6 +11,7 @@ ARGUMENT_LIST=(
     "REDIS_HOST"
     "REDIS_PASS"
     "CDN_URL"
+    "CDN_ORI"
 )
 
 # read arguments
@@ -34,7 +35,7 @@ while [[ $# -gt 0 ]]; do
             shift 2
             ;;
 
-        --edgeport-cdn)
+        --edgeportCDN)
             edgeportCDN=$2
             shift 2
             ;;
@@ -54,6 +55,11 @@ while [[ $# -gt 0 ]]; do
             shift 2
             ;;
 
+        --CDN_ORI)
+            CDN_ORI=$2
+            shift 2
+            ;;
+
         *)
             break
             ;;
@@ -62,12 +68,26 @@ done
 
 W3TC_OPTION_SET="wp w3-total-cache option set"
 LSCWP_OPTION_SET="wp lscache-admin set_option"
-LOG="/var/log/run.log"
+lOG="/var/log/run.log"
+
+_wpcache=$(wp plugin list --path=${SERVER_WEBROOT} | grep litespeed-cache)
+
+echo "--------- $_wpcache"
+
+if [[ $(echo $_wpcache |awk '{print $1}') == 'litespeed-cache' && $(echo $_wpcache |awk '{print $2}') == 'active' ]] ; then
+        WPCACHE='lscwp';
+elif [[ $(echo $_wpcache |awk '{print $1}') == 'w3-total-cache' && $(echo $_wpcache |awk '{print $2}') == 'active' ]] ; then
+        WPCACHE="w3tc";
+else
+        echo 'W3Total or Litespeed-cache is not supported';
+fi
+
+
 
 if [ $pgcache == 'true' ] ; then
   case $WPCACHE in
     w3tc)
-	  $W3TC_OPTION_SET pgcache.enabled true --type=boolean --path=${SERVER_WEBROOT} &>> $LOG
+	  $W3TC_OPTION_SET pgcache.enabled true --type=boolean --path=${SERVER_WEBROOT} &>> $lOG
           $W3TC_OPTION_SET pgcache.file.nfs true --type=boolean --path=${SERVER_WEBROOT} &>> $lOG
           ;;
     lscwp)
@@ -115,7 +135,7 @@ if [ $edgeportCDN == 'true' ] ; then
           ;;
     lscwp)
           $LSCWP_OPTION_SET cdn true --path=${SERVER_WEBROOT} &>> /var/log/run.log
-          $LSCWP_OPTION_SET cdn_ori '//${env.domain}/' --path=${SERVER_WEBROOT} &>> /var/log/run.log
+          $LSCWP_OPTION_SET cdn_ori "//${CDN_ORI}/" --path=${SERVER_WEBROOT} &>> /var/log/run.log
           ;;
      *)
           echo "-- $WPCACHE cache is not supported" &>> $lOG
