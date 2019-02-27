@@ -2,7 +2,6 @@ jpsType: update
 jpsVersion: '1.1'
 name: Addon for EdgePort CDN
 description: Addon for EdgePort CDN
-logo: https://raw.githubusercontent.com/jelastic-jps/wordpress-cluster/master/images/wp-cluster.png
 settings:
     fields:
     - name: cdn_url
@@ -12,7 +11,7 @@ settings:
       required: true
 
 globals:
-  CDN_URL: ${settings.cdn_url} 
+  CDN_URL: ${settings.cdn_url}
 
 onInstall:
   - cmd[${nodes.cp.master.id}]: |-
