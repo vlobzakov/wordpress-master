@@ -61,6 +61,11 @@ settings:
       required: 'true'
       regex: "^[\\w-.]*$"
       regexText: Incorrect WP Title.
+      
+    - type: checkbox
+      name: cdn-addon
+      caption: Install Edgeport HTTP/3 Premium CDN  
+      value: false
 
 globals:
   DB_USER: jelastic-${fn.random}
@@ -76,25 +81,21 @@ onInstall:
       - setGlobals:
           StackNodeType: lemp-dockerized
           StackTag: 1.14.2-mariadb-10.3
-          WP_PLUGIN: w3tc
 
   - if ('${settings.stack}'.toLowerCase() == 'lemp' && '${settings.topology}'.toLowerCase() == 'cluster'):
       - setGlobals:
           StackNodeType: nginxphp-dockerized
           StackTag: 1.14.2-php-7.3.1
-          WP_PLUGIN: w3tc
 
   - if ('${settings.stack}'.toLowerCase() == 'llsmp' && '${settings.topology}'.toLowerCase() == 'standalone'):
       - setGlobals:
           StackNodeType: llsmp-dockerized
           StackTag: 5.3.5-php-7.3.0
-          WP_PLUGIN: lscwp
 
   - if ('${settings.stack}'.toLowerCase() == 'llsmp' && '${settings.topology}'.toLowerCase() == 'cluster'):
       - setGlobals:
           StackNodeType: litespeedphp
           StackTag: 5.3.5-php-7.3.0
-          WP_PLUGIN: lscwp
 
   - script: |
       return { 
@@ -276,13 +277,13 @@ actions:
     - install: https://raw.githubusercontent.com/edgeport/cdn/master/manifest.yml?_r=${fn.random}
       envName: ${settings.envName}
     - script: return jelastic.dev.scripting.Eval("c05ffa5b45628a2a0c95467ebca8a0b4", session, "cdn.info", {partnerCode:1})
-    - install: ${baseUrl}/scripts/WP-CACHE.jps
+    - api: env.control.ExecCmdById
       envName: ${settings.envName}
-      settings:
-        plugin: ${globals.WP_PLUGIN}
-        edgeport-cdn: true
-        targetNodeID: ${globals.masterCP-ID0}
-        cdn_url: ${globals.PROTOCOL}://${settings.envName}-${response.response.partnerCode}.cdn.edgeport.net
+      nodeId: ${globals.masterCP-ID0}
+      commandList:
+        - command: |-
+            wget ${baseUrl}/scripts/WPCache.sh -O ~/WPCache.sh &>> /var/log/run.log
+            bash ~/WPCache.sh --edgeportCDN true --CDN_URL ${settings.envName}-${response.response.partnerCode}.cdn.edgeport.net
         
   install-wordpress:
     - install: ${baseUrl}/scripts/install-WP.jps
@@ -296,14 +297,12 @@ actions:
         wp_url: ${globals.PROTOCOL}://${env.domain}/
         targetNodeID: ${globals.masterCP-ID0}
 
-    - install: ${baseUrl}/scripts/WP-CACHE.jps
+    - api: env.control.ExecCmdById
       envName: ${settings.envName}
-      settings:
-        plugin: ${globals.WP_PLUGIN}
-        pgcache: true
-        objectcache: true
-        redis_host: REDIS
-        redis_pass: ${globals.REDIS_PASS}
-        targetNodeID: ${globals.masterCP-ID0}
+      nodeId: ${globals.masterCP-ID0}
+      commandList:
+        - command: |-
+            wget ${baseUrl}/scripts/WPCache.sh -O ~/WPCache.sh &>> /var/log/run.log
+            bash ~/WPCache.sh --pgcache true --objectcache true --REDIS_HOST REDIS --REDIS_PASS ${globals.REDIS_PASS}
 
 success: /text/success.md
