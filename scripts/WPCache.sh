@@ -97,7 +97,7 @@ cat > ~/checkCdnStatus.sh <<EOF
     fi
 EOF
 chmod +x ~/checkCdnStatus.sh
-crontab -l | { cat; echo "* * * * * ~/checkCdnStatus.sh ${CDN_URL}"; } | crontab
+crontab -l | { cat; echo "* * * * * /bin/bash ~/checkCdnStatus.sh ${CDN_URL}"; } | crontab
 }
 
 
