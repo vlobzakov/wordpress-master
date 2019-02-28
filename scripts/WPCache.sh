@@ -92,6 +92,7 @@ cat > ~/checkCdnStatus.sh <<EOF
     if [ \$status = "SUCCESS" ]
     then
       ${CDN_ENABLE_CMD} --path=${SERVER_WEBROOT} &>> /var/log/run.log
+      /usr/local/bin/wp cache flush --path=${SERVER_WEBROOT} &>> /var/log/run.log
       crontab -l | sed "/checkCdnStatus/d" | crontab -
     fi
 EOF
