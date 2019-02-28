@@ -83,6 +83,23 @@ else
 	exit;
 fi
 
+function checkCdnStatus () {
+[[ $WPCACHE == 'w3tc' ]] && CDN_ENABLE_CMD="/usr/local/bin/wp w3-total-cache option set cdn.enabled true --type=boolean"
+[[ $WPCACHE == 'lscwp' ]] && CDN_ENABLE_CMD="/usr/local/bin/wp lscache-admin set_option cdn true"
+cat > ~/checkCdnStatus.sh <<EOF
+#!/bin/bash
+  status=\$(curl \$1 -k -s -f -o /dev/null && echo "SUCCESS" || echo "ERROR")
+    if [ \$status = "SUCCESS" ]
+    then
+      ${CDN_ENABLE_CMD} --path=${SERVER_WEBROOT} &>> /var/log/run.log
+      crontab -l | sed "/checkCdnStatus/d" | crontab -
+    fi
+EOF
+chmod +x ~/checkCdnStatus.sh
+crontab -l | { cat; echo "* * * * * ~/checkCdnStatus.sh ${CDN_URL}"; } | crontab
+}
+
+
 if [ $pgcache == 'true' ] ; then
   case $WPCACHE in
     w3tc)
@@ -128,12 +145,14 @@ fi
 if [ $edgeportCDN == 'true' ] ; then
   case $WPCACHE in
     w3tc)
-	  $W3TC_OPTION_SET cdn.enabled true --type=boolean --path=${SERVER_WEBROOT} &>> /var/log/run.log
+	  checkCdnStatus;
+	  $W3TC_OPTION_SET cdn.enabled false --type=boolean --path=${SERVER_WEBROOT} &>> /var/log/run.log
           $W3TC_OPTION_SET cdn.engine mirror --path=${SERVER_WEBROOT} &>> /var/log/run.log
           $W3TC_OPTION_SET cdn.mirror.domain ${CDN_URL} --path=${SERVER_WEBROOT} &>> /var/log/run.log
           ;;
     lscwp)
-          $LSCWP_OPTION_SET cdn true --path=${SERVER_WEBROOT} &>> /var/log/run.log
+	  checkCdnStatus;
+          $LSCWP_OPTION_SET cdn false --path=${SERVER_WEBROOT} &>> /var/log/run.log
           $LSCWP_OPTION_SET cdn_ori "//${CDN_ORI}/" --path=${SERVER_WEBROOT} &>> /var/log/run.log
           ;;
      *)
