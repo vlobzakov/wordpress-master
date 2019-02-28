@@ -70,11 +70,12 @@ W3TC_OPTION_SET="wp w3-total-cache option set"
 LSCWP_OPTION_SET="wp lscache-admin set_option"
 lOG="/var/log/run.log"
 
+COMPUTE_TYPE=$(grep "COMPUTE_TYPE=" /etc/jelastic/metainf.conf | cut -d"=" -f2)
 
 if [[ ${COMPUTE_TYPE} == *"llsmp"* || ${COMPUTE_TYPE} == *"litespeed"* ]] ; then
 	wp plugin install litespeed-cache --activate --path=${SERVER_WEBROOT}
         WPCACHE='lscwp';
-elif [[ ${COMPUTE_TYPE} == *"lemp"* || ${COMPUTE_TYPE} == *"nginxphp"* ]] ; then
+elif [[ ${COMPUTE_TYPE} == *"lemp"* || ${COMPUTE_TYPE} == *"nginx"* ]] ; then
 	wp plugin install w3-total-cache --activate --path=${SERVER_WEBROOT}
         WPCACHE="w3tc";
 else
