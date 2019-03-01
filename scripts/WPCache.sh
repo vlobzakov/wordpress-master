@@ -84,14 +84,20 @@ else
 fi
 
 function checkCdnStatus () {
-[[ $WPCACHE == 'w3tc' ]] && CDN_ENABLE_CMD="/usr/local/bin/wp w3-total-cache option set cdn.enabled true --type=boolean"
-[[ $WPCACHE == 'lscwp' ]] && CDN_ENABLE_CMD="/usr/local/bin/wp lscache-admin set_option cdn true"
+if [ $WPCACHE == 'w3tc' ] ; then
+	CDN_ENABLE_CMD="/usr/local/bin/wp w3-total-cache option set cdn.enabled true --type=boolean"
+	CACHE_FLUSH="/usr/local/bin/wp w3-total-cache flush all"
+elif [ $WPCACHE == 'lscwp' ] ; then
+	CDN_ENABLE_CMD="/usr/local/bin/wp lscache-admin set_option cdn true"
+	CACHE_FLUSH="/usr/local/bin/wp lscache-purge all"
+fi
 cat > ~/checkCdnStatus.sh <<EOF
 #!/bin/bash
   status=\$(curl \$1 -k -s -f -o /dev/null && echo "SUCCESS" || echo "ERROR")
     if [ \$status = "SUCCESS" ]
     then
       ${CDN_ENABLE_CMD} --path=${SERVER_WEBROOT} &>> /var/log/run.log
+      ${CACHE_FLUSH} --path=${SERVER_WEBROOT} &>> /var/log/run.log
       /usr/local/bin/wp cache flush --path=${SERVER_WEBROOT} &>> /var/log/run.log
       crontab -l | sed "/checkCdnStatus/d" | crontab -
     fi
