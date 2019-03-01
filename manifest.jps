@@ -61,7 +61,12 @@ settings:
       required: 'true'
       regex: "^[\\w-.]*$"
       regexText: Incorrect WP Title.
-      
+ 
+    - type: checkbox
+      name: le-addon
+      caption: Install Let's Encrypt SSL Certificates. Public IP is required.
+      value: false
+ 
     - type: checkbox
       name: cdn-addon
       caption: Install Edgeport HTTP/3 Premium CDN  
