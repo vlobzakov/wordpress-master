@@ -64,7 +64,7 @@ nodes:
 
 onAfterScaleOut[nodeGroup:cp]:
   forEach(event.response.nodes):
-    cmd [${@i.id}]: sudo service nginx reload
+    cmd [${@i.id}]: sudo jem service restart
     setNodeDisplayName [${@i.id}]: AppServer
 
 onAfterScaleOut[nodeGroup:bl]:
