@@ -287,7 +287,7 @@ actions:
       nodeId: ${globals.masterCP-ID0}
       commandList:
         - command: |-
-            wget ${baseUrl}/scripts/WPCache.sh -O ~/WPCache.sh &>> /var/log/run.log
+            wget ${baseUrl}/scripts/WPCache.sh?_r=${fn.random} -O ~/WPCache.sh &>> /var/log/run.log
             bash ~/WPCache.sh --edgeportCDN true --CDN_URL ${settings.envName}-${response.response.partnerCode}.cdn.edgeport.net
         
   install-wordpress:
@@ -307,7 +307,7 @@ actions:
       nodeId: ${globals.masterCP-ID0}
       commandList:
         - command: |-
-            wget ${baseUrl}/scripts/WPCache.sh -O ~/WPCache.sh &>> /var/log/run.log
+            wget ${baseUrl}/scripts/WPCache.sh?_r=${fn.random} -O ~/WPCache.sh &>> /var/log/run.log
             bash ~/WPCache.sh --pgcache true --objectcache true --REDIS_HOST REDIS --REDIS_PASS ${globals.REDIS_PASS}
 
 success: /text/success.md
