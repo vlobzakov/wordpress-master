@@ -118,8 +118,7 @@ onInstall:
     - setup-replication
     - setup-synchronization
 
-  - if (${settings.cf-addon:false}):         
-    - registration-on-CloudFlare
+  - if (${settings.cf-addon:false}): registration-on-CloudFlare
 
   - if (${settings.le-addon:false}):         
     - install-LE-addon
@@ -129,8 +128,7 @@ onInstall:
   - install-wordpress:
       protocol: ${globals.PROTOCOL}
 
-  - if (${settings.cdn-addon:false}):    
-    - install-edgeport-CDN
+  - if (${settings.cdn-addon:false}): configure-edgeport-CDN
 
 actions: 
   run:
@@ -144,10 +142,11 @@ actions:
           envName: ${this.envName}-${this.index}
           region: ${this.region}
           index: ${this.index}
-  
+          masterEnv: ${this.envName}
+
   setup-cluster:
     - script: return {result:0, envGroups:eval('(' + MANIFEST + ')').envGroups}
-    - install: ${baseUrl}/topology/${settings.topology}.jps?_r=${fn.random}
+    - install: /topology/${settings.topology}.jps?_r=${fn.random}
       envName: ${this.envName}
       envGroups: ${response.envGroups}
       region: ${this.region}
@@ -158,7 +157,7 @@ actions:
         db_pass: ${globals.DB_PASS}
         redis_pass: ${globals.REDIS_PASS}
 
-    - if ('${settings.topology}'.toLowerCase() == 'standalone'):
+    - if ('${settings.topology}' == 'standalone'):
       - setGlobals:
           DB_HOST: 127.0.0.1
           lsync-nodeGroup: cp
@@ -175,13 +174,13 @@ actions:
                 masterCP-ID${this.index}: ${@i.id}
                 storage-IP${this.index}: ${@i.address}
 
-            - if ( ${globals.MU_REGIONS} ):
+            - if (${globals.MU_REGIONS}):
               - setup-DB-master:
                   nodeId: ${@i.id}
                   envName: ${this.envName}
                   index: ${this.index}
 
-    - if ('${settings.topology}'.toLowerCase() == 'cluster'):
+    - if ('${settings.topology}' == 'cluster'):
       - setGlobals:
           DB_HOST: DB
           lsync-nodeGroup: storage
@@ -204,12 +203,17 @@ actions:
                 masterDB-IP${this.index}: ${@i.address}
                 masterDB-ID${this.index}: ${@i.id}
 
-            - if ( ${globals.MU_REGIONS} ):
+            - if (${globals.MU_REGIONS}):
               - setup-DB-master:
                   nodeId: ${@i.id}
                   envName: ${this.envName}
                   index: ${this.index}
- 
+
+    - if (${settings.cdn-addon:false}):    
+        install-edgeport-CDN:
+          envName: ${this.envName}
+          masterEnv: ${this.masterEnv:} 
+
   setup-DB-master:
     - api: env.control.ExecCmdById
       envName: ${this.envName}
@@ -268,10 +272,15 @@ actions:
     - install: https://github.com/jelastic-jps/lets-encrypt/blob/master/manifest.jps?_r=${fn.random}
       envName: ${settings.envName}
       nodeGroup: ${globals.le-nodeGroup}
-          
+      
   install-edgeport-CDN:
     - install: https://raw.githubusercontent.com/edgeport/cdn/master/manifest.yml?_r=${fn.random}
-      envName: ${settings.envName}
+      envName: ${this.envName}
+      nodeGroup: ${globals.cdn-nodeGroup}
+      settings:
+        masterEnv: ${this.masterEnv:}         
+      
+  configure-edgeport-CDN:
     - script: return jelastic.dev.scripting.Eval("c05ffa5b45628a2a0c95467ebca8a0b4", session, "cdn.info", {partnerCode:1})
     - api: env.control.ExecCmdById
       envName: ${settings.envName}
