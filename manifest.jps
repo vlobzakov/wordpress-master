@@ -82,48 +82,39 @@ globals:
   MU_REGIONS: false
 
 onInstall:
-  - if ('${settings.stack}'.toLowerCase() == 'lemp' && '${settings.topology}'.toLowerCase() == 'standalone'):
-      - setGlobals:
-          StackNodeType: lemp-dockerized
-          StackTag: 1.14.2-mariadb-10.3
+  - if ('${settings.stack}' == 'lemp'):
+    - if ('${settings.topology}' == 'standalone'):
+      setGlobals:
+        NODE_TYPE: lemp-dockerized
+        TAG: 1.14.2-mariadb-10.3
 
-  - if ('${settings.stack}'.toLowerCase() == 'lemp' && '${settings.topology}'.toLowerCase() == 'cluster'):
-      - setGlobals:
-          StackNodeType: nginxphp-dockerized
-          StackTag: 1.14.2-php-7.3.1
+    - if ('${settings.topology}' == 'cluster'):
+        setGlobals:
+          NODE_TYPE: nginxphp-dockerized
+          TAG: 1.14.2-php-7.3.1
 
-  - if ('${settings.stack}'.toLowerCase() == 'llsmp' && '${settings.topology}'.toLowerCase() == 'standalone'):
-      - setGlobals:
-          StackNodeType: llsmp-dockerized
-          StackTag: 5.3.5-php-7.3.0
+  - if ('${settings.stack}' == 'llsmp'):
+    - if ('${settings.topology}' == 'standalone'):
+        setGlobals:
+          NODE_TYPE: llsmp-dockerized
+          TAG: 5.3.5-php-7.3.0
 
-  - if ('${settings.stack}'.toLowerCase() == 'llsmp' && '${settings.topology}'.toLowerCase() == 'cluster'):
-      - setGlobals:
-          StackNodeType: litespeedphp
-          StackTag: 5.3.5-php-7.3.0
+    - if ('${settings.topology}' == 'cluster'):
+        setGlobals:
+          NODE_TYPE: litespeedphp
+          TAG: 5.3.5-php-7.3.0
 
-  - script: |
-      return { 
-        result: 0, 
-        count_regions: '${settings.regions}'.split(',').length
-      }
-  - if ( '${response.count_regions}' == 2 ):
+  - script: return {result:0, regions:'${settings.regions}'.split(',')}
+  - if (${response.regions.length} > 1):
       setGlobals:
         MU_REGIONS: true
-
-  - script: |
-      return { 
-        result: 0, 
-        regions: '${settings.regions}'.split(',')
-      }
-
   - forEach(response.regions):
       run: 
         envName: ${settings.envName}
         region: ${@i}
         index: ${@}
 
-  - if ( ${globals.MU_REGIONS} ):
+  - if (${globals.MU_REGIONS}):
     - setup-replication
     - setup-synchronization
 
@@ -161,8 +152,8 @@ actions:
       envGroups: ${response.envGroups}
       region: ${this.region}
       settings:
-        StackNodeType: ${globals.StackNodeType}
-        StackTag: ${globals.StackTag}
+        StackNodeType: ${globals.NODE_TYPE}
+        StackTag: ${globals.TAG}
         db_user: ${globals.DB_USER}
         db_pass: ${globals.DB_PASS}
         redis_pass: ${globals.REDIS_PASS}
