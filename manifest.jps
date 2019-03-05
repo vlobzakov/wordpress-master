@@ -3,30 +3,23 @@ type: install
 id: wp-cluster-startup
 name: WordPress Cluster
 description:
-  short: WordPress DevOps Pack  
+  text: WordPress Cluster package provides integrated autoscaling and high availability for development and production environments. 
+    The platform automatically deploys and configures chosen tolopology and required addons at specified regions.    
+  short: WordPress Cluster Pack  
+logo: https://raw.githubusercontent.com/jelastic-jps/wordpress-cluster/master/images/wp-cluster.png  
 baseUrl: https://raw.githubusercontent.com/sych74/wordpress-master/master
 settings:
   fields:
-    - caption: Stack
-      type: list
-      name: stack
-      default: lemp
-      required: true
-      values:        
-        - value: lemp
-          caption: NginxPHP
-        - value: llsmp
-          caption: LiteSpeed
     - type: list
       caption: Topology
       name: topology
       value: standalone
       values:
         - value: standalone
-          caption: Standalone solution for WordPress
+          caption: Standalone
           tooltip: <h3>1 CP + 1 DB</h3>Standalone solution for WordPress. <img width='314' height='280' src='https://github.com/sych74/wordpress-cluster/raw/master/images/single-topology.png?sanitize=true'>
         - value: cluster
-          caption: Highly available and scalable clustered solution for WordPress
+          caption: HA Cluster
           tooltip: <h3>1 LB + 2 CP + 3 DB Galera + 1 ST</h3>Highly available and scalable clustered solution for WordPress. <img width='314' height='280' src='https://github.com/sych74/wordpress-cluster/raw/master/images/topology.png?sanitize=true'>
       tipParams:
         dismissDelay: 600000
@@ -34,7 +27,7 @@ settings:
         hideOnOver: false
         showDelay: 0
   
-    - caption: Region
+    - caption: Regions
       type: regionlist
       name: regions
       disableInactive: true
@@ -45,7 +38,7 @@ settings:
       filter:
         isActive: true
       default: premium-vz7
-      
+
     - caption: Env Name  
       type: envname
       name: envName
@@ -57,20 +50,31 @@ settings:
     - name: wp_title
       caption: WP Title
       type: string
+      inputType: hidden
       default: HelloWorld
       required: 'true'
       regex: "^[\\w-.]*$"
       regexText: Incorrect WP Title.
- 
+      
+    - caption: Addons
+      type: displayfield
+      name: displayfield
+      markup: 
+
+    - type: checkbox
+      name: ls-addon
+      caption: Install LiteSpeed High-Performance Web Server
+      value: true
+
     - type: checkbox
       name: le-addon
-      caption: Install Let's Encrypt SSL Certificates. Public IP is required.
-      value: false
+      caption: Install Let's Encrypt SSL with Auto-Renewal
+      value: true
  
     - type: checkbox
       name: cdn-addon
-      caption: Install Edgeport HTTP/3 Premium CDN  
-      value: false
+      caption: Install Lightning-Fast Premium CDN with 130+ PoPs
+      value: true
 
 globals:
   DB_USER: jelastic-${fn.random}
@@ -82,7 +86,7 @@ globals:
   MU_REGIONS: false
 
 onInstall:
-  - if ('${settings.stack}' == 'lemp'):
+  - if (!${settings.ls-addon}):
     - if ('${settings.topology}' == 'standalone'):
       setGlobals:
         NODE_TYPE: lemp-dockerized
@@ -93,7 +97,7 @@ onInstall:
           NODE_TYPE: nginxphp-dockerized
           TAG: 1.14.2-php-7.3.1
 
-  - if ('${settings.stack}' == 'llsmp'):
+  - if (${settings.ls-addon}):
     - if ('${settings.topology}' == 'standalone'):
         setGlobals:
           NODE_TYPE: llsmp-dockerized
