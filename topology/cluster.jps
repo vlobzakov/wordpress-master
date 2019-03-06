@@ -9,7 +9,6 @@ globals:
 nodes:
   - nodeType: nginx-dockerized
     extip: true
-    tag: 1.14.2
     count: 1
     cloudlets: 16
     nodeGroup: bl
@@ -25,7 +24,7 @@ nodes:
 
   - nodeType: ${globals.StackNodeType}
     tag: ${globals.StackTag}
-    count: 2
+    count: 1
     cloudlets: 8
     nodeGroup: cp
     scalingMode: STATEFUL
@@ -90,9 +89,6 @@ onInstall:
       DB_PASS: ${settings.db_pass:[fn.password(10)]}
       REDIS_PASS: ${settings.redis_pass:[fn.password(10)]}
 
-  - log: Auto Scaling Triggers
-  - script: "${baseUrl}../scripts/addTriggers.js"
-
   - log: Set Node Display Name
   - setNodeDisplayName [bl]: Load balancer
   - setNodeDisplayName [cp]: AppServer
@@ -118,3 +114,6 @@ onInstall:
   - install: ${baseUrl}../scripts/setup-CP.jps?_r=${fn.random}
     settings:
       redis_pass: ${globals.REDIS_PASS}
+      
+  - log: Auto Scaling Triggers
+  - script: "${baseUrl}../scripts/addTriggers.js"
