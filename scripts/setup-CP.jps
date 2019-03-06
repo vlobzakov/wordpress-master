@@ -26,12 +26,14 @@ actions:
         jem service restart
 
   nginx:
-    - if (/lemp/.test("${nodes.cp.nodeType}"):
+    - if (/lemp/.test("${nodes.cp.nodeType}")):
         - cmd[cp]: |-
             mkdir -p /var/www/webroot/SITES_ENABLED;
             ln -s /var/www/webroot/SITES_ENABLED /etc/nginx/conf.d/SITES_ENABLED;
+        - cmd[cp]: |-
             mkdir -p /var/www/webroot/SSL;
             ln -s /var/www/webroot/SSL /var/lib/jelastic/SSL;
+          user: root
     - cmd[cp]: |-
         wget ${baseUrl}../configs/cp/nginx/nginx.conf -O /etc/nginx/nginx.conf
         wget ${baseUrl}../configs/cp/nginx/nossl.conf -O /etc/nginx/conf.d/nossl.conf
