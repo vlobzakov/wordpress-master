@@ -26,10 +26,10 @@ actions:
         jem service restart
 
   nginx:
-    - if (/lemp/.test("${nodes.cp.nodeType}")
-      - cmd[cp]: |-
-          mkdir -p /var/www/webroot/SITES_ENABLED;
-          ln -s /var/www/webroot/SITES_ENABLED /etc/nginx/conf.d/SITES_ENABLED;
+    - if (/lemp/.test("${nodes.cp.nodeType}"):
+        - cmd[cp]: |-
+            mkdir -p /var/www/webroot/SITES_ENABLED;
+            ln -s /var/www/webroot/SITES_ENABLED /etc/nginx/conf.d/SITES_ENABLED;
     - cmd[cp]: |-
         wget ${baseUrl}../configs/cp/nginx/nginx.conf -O /etc/nginx/nginx.conf
         wget ${baseUrl}../configs/cp/nginx/nossl.conf -O /etc/nginx/conf.d/nossl.conf
@@ -41,4 +41,3 @@ actions:
         chmod +x ~/checkNginxStatus.sh
         crontab -l | { cat; echo "* * * * * /bin/bash ~/checkNginxStatus.sh"; } | crontab
         
-
