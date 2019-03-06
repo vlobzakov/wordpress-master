@@ -3,6 +3,7 @@ jpsVersion: '1.1'
 name: Multisites addon for Wordpress cluster
 description: Multisites addon for Wordpress cluster
 logo: https://raw.githubusercontent.com/jelastic-jps/wordpress-cluster/master/images/wp-cluster.png
+baseUrl: https://raw.githubusercontent.com/sych74/wordpress-master/master
 settings:
   main:
     fields:
@@ -18,21 +19,21 @@ onInstall:
   - if (/lemp/.test("${nodes.cp.nodeType}") || /nginxphp/.test("${nodes.cp.nodeType}")):
     - if ('${settings.mode}' == 'subdir'):
         cmd[${nodes.cp.master.id}]: |-
-          wget ${baseUrl}../configs/cp/nginx/subdir.conf -O /etc/nginx/conf.d/SITES_ENABLED/subdir.conf
+          wget ${baseUrl}/configs/cp/nginx/subdir.conf -O /etc/nginx/conf.d/SITES_ENABLED/subdir.conf
           sudo /etc/init.d/nginx reload
     - if ('${settings.mode}' == 'subdom'):
         cmd[${nodes.cp.master.id}]: |-
-          wget ${baseUrl}../configs/cp/nginx/subdom.conf -O /etc/nginx/conf.d/SITES_ENABLED/subdom.conf
+          wget ${baseUrl}/configs/cp/nginx/subdom.conf -O /etc/nginx/conf.d/SITES_ENABLED/subdom.conf
           sudo /etc/init.d/nginx reload
 
   - if (/llsmp/.test("${nodes.cp.nodeType}") || /litespeed/.test("${nodes.cp.nodeType}")):
     - if ('${settings.mode}' == 'subdir'):
         cmd[${nodes.cp.master.id}]: |-
-          wget ${baseUrl}../configs/cp/litespeed/.htaccess_subdir -O /var/www/webroot/ROOT/.htaccess_subdir
+          wget ${baseUrl}/configs/cp/litespeed/.htaccess_subdir -O /var/www/webroot/ROOT/.htaccess_subdir
           sudo jem service restart
     - if ('${settings.mode}' == 'subdom'):
         cmd[${nodes.cp.master.id}]: |-
-          wget ${baseUrl}../configs/cp/litespeed/.htaccess_subdom -O /var/www/webroot/ROOT/.htaccess_subdom
+          wget ${baseUrl}/configs/cp/litespeed/.htaccess_subdom -O /var/www/webroot/ROOT/.htaccess_subdom
           sudo jem service restart
 
   - cmd[${nodes.cp.master.id}]: |-
