@@ -30,6 +30,8 @@ actions:
         - cmd[cp]: |-
             mkdir -p /var/www/webroot/SITES_ENABLED;
             ln -s /var/www/webroot/SITES_ENABLED /etc/nginx/conf.d/SITES_ENABLED;
+            mkdir -p /var/www/webroot/SSL;
+            ln -s /var/www/webroot/SSL /var/lib/jelastic/SSL;
     - cmd[cp]: |-
         wget ${baseUrl}../configs/cp/nginx/nginx.conf -O /etc/nginx/nginx.conf
         wget ${baseUrl}../configs/cp/nginx/nossl.conf -O /etc/nginx/conf.d/nossl.conf
