@@ -34,10 +34,15 @@ nodes:
       - nosqldb:REDIS
     volumes:
       - "/var/www/webroot/ROOT"
+      - "/etc/nginx/conf.d/SITES_ENABLED"
     volumeMounts:
       "/var/www/webroot/ROOT":
         readOnly: false
         sourcePath: "/data/ROOT"
+        sourceNodeGroup: storage
+      "/etc/nginx/conf.d/SITES_ENABLED":
+        readOnly: false
+        sourcePath: "/data/SITES_ENABLED"
         sourceNodeGroup: storage
     env:
       SERVER_WEBROOT: /var/www/webroot/ROOT
