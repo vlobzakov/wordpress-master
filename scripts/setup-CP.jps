@@ -26,9 +26,11 @@ actions:
         jem service restart
 
   nginx:
+    - if (/lemp/.test("${nodes.cp.nodeType}")
+      - cmd[cp]: |-
+          mkdir -p /var/www/webroot/SITES_ENABLED;
+          ln -s /var/www/webroot/SITES_ENABLED /etc/nginx/conf.d/SITES_ENABLED;
     - cmd[cp]: |-
-        mkdir -p /var/www/webroot/SITES_ENABLED;
-        ln -s /var/www/webroot/SITES_ENABLED /etc/nginx/conf.d/SITES_ENABLED;
         wget ${baseUrl}../configs/cp/nginx/nginx.conf -O /etc/nginx/nginx.conf
         wget ${baseUrl}../configs/cp/nginx/nossl.conf -O /etc/nginx/conf.d/nossl.conf
         wget ${baseUrl}../configs/cp/nginx/ssl.conf.disabled -O /etc/nginx/conf.d/ssl.conf.disabled
