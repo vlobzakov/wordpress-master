@@ -35,3 +35,6 @@ actions:
         wget ${baseUrl}../configs/cp/nginx/fastcgi_cache.conf -O /etc/nginx/conf.d/fastcgi_cache.conf
         wget ${baseUrl}../configs/cp/nginx/default.conf -O /etc/nginx/conf.d/SITES_ENABLED/default.conf
         wget ${baseUrl}../configs/cp/nginx/skip_cache.conf -O /etc/nginx/conf.d/SITES_ENABLED/skip_cache.conf
+        wget ${baseUrl}../scripts/checkNginxStatus.sh -O ~/checkNginxStatus.sh
+        
+
