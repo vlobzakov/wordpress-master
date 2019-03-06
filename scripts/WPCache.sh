@@ -3,15 +3,19 @@
 pgcache=false;
 objectcache=false;
 edgeportCDN=false;
+wpmu=false;
 
 ARGUMENT_LIST=(
     "pgcache"
     "objectcache"
     "edgeportCDN"
+    "wpmu"
     "REDIS_HOST"
     "REDIS_PASS"
     "CDN_URL"
     "CDN_ORI"
+    "MODE"
+
 )
 
 # read arguments
@@ -57,6 +61,16 @@ while [[ $# -gt 0 ]]; do
 
         --CDN_ORI)
             CDN_ORI=$2
+            shift 2
+            ;;
+
+        --wpmu)
+            wpmu=$2
+            shift 2
+            ;;
+
+        --MODE)
+            MODE=$2
             shift 2
             ;;
 
@@ -167,6 +181,23 @@ if [ $edgeportCDN == 'true' ] ; then
      *)
           echo "-- $WPCACHE cache is not supported" &>> $lOG
           exit 1
+          ;;
+  esac
+fi
+
+if [ $wpmu == 'true' ] ; then
+  case $WPCACHE in
+    w3tc)
+          /usr/local/bin/wp plugin deactivate w3-total-cache --path=${SERVER_WEBROOT} &>> /var/log/run.log
+	  [[ ${MODE} == 'subdir' ]] &&  /usr/local/bin/wp core multisite-convert --path=${SERVER_WEBROOT} &>> /var/log/run.log
+	  [[ ${MODE} == 'subdom' ]] &&  /usr/local/bin/wp core multisite-convert --path=${SERVER_WEBROOT} --subdomains &>> /var/log/run.log
+	  /usr/local/bin/wp plugin activate w3-total-cache --path=${SERVER_WEBROOT} &>> /var/log/run.log
+          ;;
+    lscwp)
+          /usr/local/bin/wp plugin deactivate litespeed-cache --path=${SERVER_WEBROOT} &>> /var/log/run.log
+          [[ ${MODE} == 'subdir' ]] &&  /usr/local/bin/wp core multisite-convert --path=${SERVER_WEBROOT} &>> /var/log/run.log
+          [[ ${MODE} == 'subdom' ]] &&  /usr/local/bin/wp core multisite-convert --path=${SERVER_WEBROOT} --subdomains &>> /var/log/run.log
+          /usr/local/bin/wp plugin activate litespeed-cache --path=${SERVER_WEBROOT} &>> /var/log/run.log
           ;;
   esac
 fi
