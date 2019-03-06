@@ -38,5 +38,7 @@ actions:
         wget ${baseUrl}../configs/cp/nginx/default.conf -O /etc/nginx/conf.d/SITES_ENABLED/default.conf
         wget ${baseUrl}../configs/cp/nginx/skip_cache.conf -O /etc/nginx/conf.d/SITES_ENABLED/skip_cache.conf
         wget ${baseUrl}../scripts/checkNginxStatus.sh -O ~/checkNginxStatus.sh
+        chmod +x ~/checkNginxStatus.sh
+        crontab -l | { cat; echo "* * * * * /bin/bash ~/checkNginxStatus.sh"; } | crontab
         
 
