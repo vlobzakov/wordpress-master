@@ -4,7 +4,6 @@ name: Wordpress Cluster
 
 globals:
   StackNodeType: ${settings.StackNodeType}
-  StackTag: ${settings.StackTag}
 
 nodes:
   - nodeType: nginx-dockerized
@@ -23,11 +22,10 @@ nodes:
     displayName: Load balancer
 
   - nodeType: ${globals.StackNodeType}
-    tag: ${globals.StackTag}
     count: 1
     cloudlets: 8
     nodeGroup: cp
-    scalingMode: STATEFUL
+    scalingMode: STATELESS
     displayName: AppServer
     links:
       - sqldb:DB
@@ -48,7 +46,6 @@ nodes:
       SERVER_WEBROOT: /var/www/webroot/ROOT
 
   - nodeType: mariadb-dockerized
-    tag: 10.3.11
     count: 3
     cloudlets: 8
     nodeGroup: sqldb
