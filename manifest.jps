@@ -90,23 +90,19 @@ onInstall:
     - if ('${settings.topology}' == 'standalone'):
       setGlobals:
         NODE_TYPE: lemp-dockerized
-        TAG: 1.14.2-mariadb-10.3
 
     - if ('${settings.topology}' == 'cluster'):
         setGlobals:
           NODE_TYPE: nginxphp-dockerized
-          TAG: 1.14.2-php-7.3.1
 
   - if (${settings.ls-addon}):
     - if ('${settings.topology}' == 'standalone'):
         setGlobals:
           NODE_TYPE: llsmp-dockerized
-          TAG: 5.3.5-php-7.3.0
 
     - if ('${settings.topology}' == 'cluster'):
         setGlobals:
           NODE_TYPE: litespeedphp
-          TAG: 5.3.5-php-7.3.0
 
   - script: return {result:0, regions:'${settings.regions}'.split(',')}
   - if (${response.regions.length} > 1):
