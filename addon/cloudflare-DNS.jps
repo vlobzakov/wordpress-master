@@ -8,7 +8,7 @@ settings:
     - name: custom_domain
       caption: Custom Domain
       type: string
-      default: .unigeocloud.com
+      default: ''
       required: true
     - name: cf_email
       caption: CF Email
