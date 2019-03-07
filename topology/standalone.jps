@@ -4,7 +4,6 @@ name: Wordpress Standalone
 
 globals:
   StackNodeType: ${settings.StackNodeType}
-  StackTag: ${settings.StackTag}
 
 nodes:
   - nodeType: ${globals.StackNodeType}
