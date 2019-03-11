@@ -3,8 +3,8 @@ jpsVersion: '1.1'
 name: Wordpress Cluster
 
 globals:
-  StackNodeType: ${settings.StackNodeType}
-  app_CONFIGS_PATH: ${settings.app_CONFIGS_PATH}
+  NODE_TYPE: ${settings.NODE_TYPE}
+  APP_CONFIGS_PATH: ${settings.APP_CONFIGS_PATH}
 
 nodes:
 
@@ -23,7 +23,7 @@ nodes:
         sourceNodeGroup: storage
     displayName: Load balancer
 
-  - nodeType: ${globals.StackNodeType}
+  - nodeType: ${globals.NODE_TYPE}
     count: 1
     cloudlets: 8
     nodeGroup: cp
@@ -33,13 +33,13 @@ nodes:
       - sqldb:DB
     volumes:
       - /var/www/webroot/ROOT
-      - ${globals.app_CONFIGS_PATH}
+      - ${globals.APP_CONFIGS_PATH}
     volumeMounts:
       "/var/www/webroot/ROOT":
         readOnly: false
         sourcePath: "/data/ROOT"
         sourceNodeGroup: storage
-      "${globals.app_CONFIGS_PATH}":
+      "${globals.APP_CONFIGS_PATH}":
         readOnly: false
         sourcePath: "/data/APP_CONFIGS"
         sourceNodeGroup: storage
