@@ -80,7 +80,7 @@ onAfterClone:
   settings:
     new_domain: ${event.response.env.domain}
 
-onBeforeInit:
+onBeforeInstall:
   - if (/lemp/.test("${globals.StackNodeType}") || /nginxphp/.test("${globals.StackNodeType}")):
       setGlobals:
         PATH_APP_CONFIGS: /etc/nginx/conf.d/SITES_ENABLED
