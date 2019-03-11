@@ -81,11 +81,11 @@ onAfterClone:
     new_domain: ${event.response.env.domain}
 
 onBeforeInit:
-  - if (/lemp/.test("${nodes.cp.nodeType}") || /nginxphp/.test("${nodes.cp.nodeType}")):
+  - if (/lemp/.test("${globals.StackNodeType}") || /nginxphp/.test("${globals.StackNodeType}")):
       setGlobals:
         PATH_APP_CONFIGS: /etc/nginx/conf.d/SITES_ENABLED
         
-  - if (/llsmp/.test("${nodes.cp.nodeType}") || /litespeed/.test("${nodes.cp.nodeType}")):
+  - if (/llsmp/.test("${globals.StackNodeType}") || /litespeed/.test("${globals.StackNodeType}")):
       setGlobals:
         PATH_APP_CONFIGS: /var/www/conf
 
