@@ -4,6 +4,7 @@ name: Wordpress Cluster
 
 globals:
   StackNodeType: ${settings.StackNodeType}
+  app_CONFIGS_PATH: ${settings.app_CONFIGS_PATH}
 
 nodes:
 
@@ -32,7 +33,7 @@ nodes:
       - sqldb:DB
     volumes:
       - /var/www/webroot/ROOT
-      - ${globals.PATH_APP_CONFIGS}
+      - ${globals.app_CONFIGS_PATH}
     volumeMounts:
       "/var/www/webroot/ROOT":
         readOnly: false
@@ -79,15 +80,6 @@ onAfterClone:
   envName: ${event.response.env.envName}
   settings:
     new_domain: ${event.response.env.domain}
-
-onBeforeInstall:
-  - if (/lemp/.test("${globals.StackNodeType}") || /nginxphp/.test("${globals.StackNodeType}")):
-      setGlobals:
-        PATH_APP_CONFIGS: /etc/nginx/conf.d/SITES_ENABLED
-        
-  - if (/llsmp/.test("${globals.StackNodeType}") || /litespeed/.test("${globals.StackNodeType}")):
-      setGlobals:
-        PATH_APP_CONFIGS: /var/www/conf
 
 onInstall:
   - setGlobals:
