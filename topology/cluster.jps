@@ -7,7 +7,6 @@ globals:
   APP_CONFIGS_PATH: ${settings.APP_CONFIGS_PATH}
 
 nodes:
-
   - nodeType: nginx-dockerized
     extip: true
     count: 1
