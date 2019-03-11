@@ -39,7 +39,7 @@ nodes:
         readOnly: false
         sourcePath: "/data/ROOT"
         sourceNodeGroup: storage
-      "${globals.PATH_APP_CONFIGS}":
+      "${globals.app_CONFIGS_PATH}":
         readOnly: false
         sourcePath: "/data/APP_CONFIGS"
         sourceNodeGroup: storage
