@@ -6,21 +6,6 @@ globals:
   StackNodeType: ${settings.StackNodeType}
 
 nodes:
-  - nodeType: nginx-dockerized
-    extip: true
-    count: 1
-    cloudlets: 16
-    nodeGroup: bl
-    scalingMode: STATEFUL
-    volumes:
-      - "/var/lib/jelastic/SSL"
-    volumeMounts:
-      "/var/lib/jelastic/SSL":
-        readOnly: false
-        sourcePath: "/data/SSL"
-        sourceNodeGroup: storage
-    displayName: Load balancer
-
   - nodeType: ${globals.StackNodeType}
     count: 1
     cloudlets: 8
@@ -29,41 +14,26 @@ nodes:
     displayName: AppServer
     links:
       - sqldb:DB
-      - nosqldb:REDIS
     volumes:
-      - "/var/www/webroot/ROOT"
-      - "/etc/nginx/conf.d/SITES_ENABLED"
+      - /var/www/webroot/ROOT
+      - ${globals.PATH_APP_CONFIGS}
     volumeMounts:
       "/var/www/webroot/ROOT":
         readOnly: false
         sourcePath: "/data/ROOT"
         sourceNodeGroup: storage
-      "/etc/nginx/conf.d/SITES_ENABLED":
+      "${globals.PATH_APP_CONFIGS}":
         readOnly: false
-        sourcePath: "/data/SITES_ENABLED"
+        sourcePath: "/data/APP_CONFIGS"
         sourceNodeGroup: storage
     env:
       SERVER_WEBROOT: /var/www/webroot/ROOT
-
-  - nodeType: mariadb-dockerized
-    count: 3
-    cloudlets: 8
-    nodeGroup: sqldb
-    displayName: Database
-    env:
-      ON_ENV_INSTALL: ''
-      JELASTIC_PORTS: '4567,4568,4444'
 
   - nodeType: storage
     cloudlets: 8
     nodeGroup: storage
     displayName: Storage
     
-  - nodeType: redis
-    count: 1
-    cloudlets: 8
-    nodeGroup: nosqldb
-
 onAfterScaleOut[nodeGroup:cp]:
   forEach(event.response.nodes):
     cmd [${@i.id}]: sudo jem service restart
@@ -84,6 +54,15 @@ onAfterClone:
   envName: ${event.response.env.envName}
   settings:
     new_domain: ${event.response.env.domain}
+
+onBeforeInit:
+  - if (/lemp/.test("${nodes.cp.nodeType}") || /nginxphp/.test("${nodes.cp.nodeType}")):
+      setGlobal:
+        PATH_APP_CONFIGS: /etc/nginx/conf.d/SITES_ENABLED
+        
+  - if (/llsmp/.test("${nodes.cp.nodeType}") || /litespeed/.test("${nodes.cp.nodeType}")):
+      setGlobal:
+        PATH_APP_CONFIGS: /var/www/conf
 
 onInstall:
   - setGlobals:
@@ -108,14 +87,5 @@ onInstall:
   - log: Load Balancer Setup
   - install: ${baseUrl}../scripts/setup-BL.jps?_r=${fn.random}
 
-  - log: Redis Setup
-  - cmd [nosqldb]: jem passwd set -p ${globals.REDIS_PASS}
-    user: root
-
-  - log: App Servers Setup
-  - install: ${baseUrl}../scripts/setup-CP.jps?_r=${fn.random}
-    settings:
-      redis_pass: ${globals.REDIS_PASS}
-      
   - log: Auto Scaling Triggers
   - script: "${baseUrl}../scripts/addTriggers.js"
