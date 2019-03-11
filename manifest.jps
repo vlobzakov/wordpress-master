@@ -79,7 +79,6 @@ settings:
 globals:
   DB_USER: jelastic-${fn.random}
   DB_PASS: ${fn.password(10)}
-  REDIS_PASS: ${fn.password(10)}
   SYNC_PASS: ${fn.password(10)}
   PROTOCOL: http
   WP_ADMIN_PASS: "${fn.password(10)}"
@@ -102,7 +101,7 @@ onInstall:
 
     - if ('${settings.topology}' == 'cluster'):
         setGlobals:
-          NODE_TYPE: litespeedphp
+          NODE_TYPE: litespeedphp-redis
 
   - script: return {result:0, regions:'${settings.regions}'.split(',')}
   - if (${response.regions.length} > 1):
@@ -155,7 +154,6 @@ actions:
         StackTag: ${globals.TAG}
         db_user: ${globals.DB_USER}
         db_pass: ${globals.DB_PASS}
-        redis_pass: ${globals.REDIS_PASS}
 
     - if ('${settings.topology}' == 'standalone'):
       - setGlobals:
@@ -308,6 +306,6 @@ actions:
       commandList:
         - command: |-
             wget ${baseUrl}/scripts/WPCache.sh?_r=${fn.random} -O ~/WPCache.sh &>> /var/log/run.log
-            bash ~/WPCache.sh --pgcache true --objectcache true --REDIS_HOST REDIS --REDIS_PASS ${globals.REDIS_PASS}
+            bash ~/WPCache.sh --pgcache true --objectcache true --REDIS_HOST 127.0.0.1
 
 success: /text/success.md
