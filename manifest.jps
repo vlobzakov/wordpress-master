@@ -89,19 +89,23 @@ onInstall:
     - if ('${settings.topology}' == 'standalone'):
       setGlobals:
         NODE_TYPE: lemp-dockerized
+        APP_CONFIGS_PATH: /etc/nginx/conf.d/SITES_ENABLED
 
     - if ('${settings.topology}' == 'cluster'):
         setGlobals:
           NODE_TYPE: nginxphp-dockerized
+          APP_CONFIGS_PATH: /etc/nginx/conf.d/SITES_ENABLED
 
   - if (${settings.ls-addon}):
     - if ('${settings.topology}' == 'standalone'):
         setGlobals:
           NODE_TYPE: llsmp-dockerized
+          APP_CONFIGS_PATH: /var/www/conf
 
     - if ('${settings.topology}' == 'cluster'):
         setGlobals:
           NODE_TYPE: litespeedphp-redis
+          APP_CONFIGS_PATH: /var/www/conf
 
   - script: return {result:0, regions:'${settings.regions}'.split(',')}
   - if (${response.regions.length} > 1):
@@ -150,8 +154,8 @@ actions:
       envGroups: ${response.envGroups}
       region: ${this.region}
       settings:
-        StackNodeType: ${globals.NODE_TYPE}
-        StackTag: ${globals.TAG}
+        NODE_TYPE: ${globals.NODE_TYPE}
+        APP_CONFIGS_PATH: ${globals.APP_CONFIGS_PATH}
         db_user: ${globals.DB_USER}
         db_pass: ${globals.DB_PASS}
 
