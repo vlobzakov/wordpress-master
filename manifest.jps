@@ -100,12 +100,12 @@ onInstall:
     - if ('${settings.topology}' == 'standalone'):
         setGlobals:
           NODE_TYPE: llsmp-dockerized
-          APP_CONFIGS_PATH: /var/www/conf
+          APP_CONFIGS_PATH: /var/www/webroot/TMP
 
     - if ('${settings.topology}' == 'cluster'):
         setGlobals:
           NODE_TYPE: litespeedphp-redis
-          APP_CONFIGS_PATH: /var/www/conf
+          APP_CONFIGS_PATH: /var/www/webroot/TMP
 
   - script: return {result:0, regions:'${settings.regions}'.split(',')}
   - if (${response.regions.length} > 1):
