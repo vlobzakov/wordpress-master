@@ -22,7 +22,6 @@ actions:
         wget ${baseUrl}../configs/cp/php/opcache.ini -O ${this.PHP_CONFIG_PATH}/opcache.ini
         wget ${baseUrl}../configs/cp/php/extensions.ini -O ${this.PHP_CONFIG_PATH}/extensions.ini
         wget ${baseUrl}../configs/cp/php/redis.ini -O ${this.PHP_CONFIG_PATH}/redis.ini
-        sed -i "s/_REDIS_PASSWD_/${globals.REDIS_PASS}/" ${this.PHP_CONFIG_PATH}/redis.ini
         jem service restart
 
   nginx:
