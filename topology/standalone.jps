@@ -32,6 +32,9 @@ onInstall:
       wget https://raw.githubusercontent.com/jelastic-jps/mysql-cluster/master/scripts/setupUser.sh -O ~/setupUser.sh &>> /var/log/run.log
       bash ~/setupUser.sh ${globals.DB_USER} ${globals.DB_PASS} &>> /var/log/run.log
     user: root  
-
+  
   - log: App Servers Setup
   - install: ${baseUrl}../scripts/setup-CP.jps?_r=${fn.random}
+    settings:
+      TARGET_NODES: cp
+
