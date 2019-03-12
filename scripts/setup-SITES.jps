@@ -1,0 +1,20 @@
+jpsType: update
+name: Custom Sites setup script
+description: This script for Sites configurations
+
+onInstall:
+  - nginx
+
+actions:
+  nginx:
+    - if (/lemp/.test("${nodes.cp.nodeType}")):
+        - cmd[cp]: |-
+            mkdir -p /var/www/webroot/SITES_ENABLED;
+            ln -s /var/www/webroot/SITES_ENABLED /etc/nginx/conf.d/SITES_ENABLED;
+        - cmd[cp]: |-
+            mkdir -p /var/www/webroot/SSL;
+            ln -s /var/www/webroot/SSL /var/lib/jelastic/SSL;
+          user: root
+    - cmd[cp]: |-
+        wget ${baseUrl}../configs/cp/nginx/default.conf -O /etc/nginx/conf.d/SITES_ENABLED/default.conf
+        wget ${baseUrl}../configs/cp/nginx/skip_cache.conf -O /etc/nginx/conf.d/SITES_ENABLED/skip_cache.conf
