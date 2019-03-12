@@ -15,6 +15,6 @@ actions:
             mkdir -p /var/www/webroot/SSL;
             ln -s /var/www/webroot/SSL /var/lib/jelastic/SSL;
           user: root
-    - cmd[cp]: |-
-        wget ${baseUrl}../configs/cp/nginx/default.conf -O /etc/nginx/conf.d/SITES_ENABLED/default.conf
-        wget ${baseUrl}../configs/cp/nginx/skip_cache.conf -O /etc/nginx/conf.d/SITES_ENABLED/skip_cache.conf
+        - cmd[cp]: |-
+            wget ${baseUrl}../configs/cp/nginx/default.conf -O /etc/nginx/conf.d/SITES_ENABLED/default.conf
+            wget ${baseUrl}../configs/cp/nginx/skip_cache.conf -O /etc/nginx/conf.d/SITES_ENABLED/skip_cache.conf
