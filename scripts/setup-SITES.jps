@@ -3,7 +3,8 @@ name: Custom Sites setup script
 description: This script for Sites configurations
 
 onInstall:
-  - nginx
+  - if (/lemp/.test("${nodes.cp.nodeType}") || /nginxphp/.test("${nodes.cp.nodeType}")):
+    - nginx
 
 actions:
   nginx:
@@ -15,7 +16,7 @@ actions:
             mkdir -p /var/www/webroot/SSL;
             ln -s /var/www/webroot/SSL /var/lib/jelastic/SSL;
           user: root
-        - cmd[cp]: |-
-            wget ${baseUrl}../configs/cp/nginx/default.conf -O /etc/nginx/conf.d/SITES_ENABLED/default.conf
-            wget ${baseUrl}../configs/cp/nginx/skip_cache.conf -O /etc/nginx/conf.d/SITES_ENABLED/skip_cache.conf
-            sudo /etc/init.d/nginx restart
+    - cmd[cp]: |-
+        wget ${baseUrl}../configs/cp/nginx/default.conf -O /etc/nginx/conf.d/SITES_ENABLED/default.conf
+        wget ${baseUrl}../configs/cp/nginx/skip_cache.conf -O /etc/nginx/conf.d/SITES_ENABLED/skip_cache.conf
+        sudo /etc/init.d/nginx restart
