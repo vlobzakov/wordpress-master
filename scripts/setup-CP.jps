@@ -3,13 +3,13 @@ name: CP setup script
 description: This script for AppServer configurations
 
 globals:
-  REDIS_PASS: ${settings.redis_pass}
+  TARGET_NODES: ${settings.TARGET_NODES}
 
 onInstall:
   - if (/lemp/.test("${nodes.cp.nodeType}") || /nginxphp/.test("${nodes.cp.nodeType}")):
       - nginx
       - redis: 
-         PHP_CONFIG_PATH: /etc/php.d
+          PHP_CONFIG_PATH: /etc/php.d
 
   - if (/llsmp/.test("${nodes.cp.nodeType}") || /litespeed/.test("${nodes.cp.nodeType}")):
       - redis: 
@@ -17,7 +17,7 @@ onInstall:
 
 actions:
   redis:
-    - cmd[cp]: |-
+    - cmd[${globals.TARGET_NODES}]: |-
         wget ${baseUrl}../configs/cp/php/wp-upload.ini -O ${this.PHP_CONFIG_PATH}/wp-upload.ini
         wget ${baseUrl}../configs/cp/php/opcache.ini -O ${this.PHP_CONFIG_PATH}/opcache.ini
         wget ${baseUrl}../configs/cp/php/extensions.ini -O ${this.PHP_CONFIG_PATH}/extensions.ini
@@ -26,20 +26,18 @@ actions:
 
   nginx:
     - if (/lemp/.test("${nodes.cp.nodeType}")):
-        - cmd[cp]: |-
+        - cmd[${globals.TARGET_NODES}]: |-
             mkdir -p /var/www/webroot/SITES_ENABLED;
             ln -s /var/www/webroot/SITES_ENABLED /etc/nginx/conf.d/SITES_ENABLED;
-        - cmd[cp]: |-
+        - cmd[${globals.TARGET_NODES}]: |-
             mkdir -p /var/www/webroot/SSL;
             ln -s /var/www/webroot/SSL /var/lib/jelastic/SSL;
           user: root
-    - cmd[cp]: |-
+    - cmd[${globals.TARGET_NODES}]: |-
         wget ${baseUrl}../configs/cp/nginx/nginx.conf -O /etc/nginx/nginx.conf
         wget ${baseUrl}../configs/cp/nginx/nossl.conf -O /etc/nginx/conf.d/nossl.conf
         wget ${baseUrl}../configs/cp/nginx/ssl.conf.disabled -O /etc/nginx/conf.d/ssl.conf.disabled
         wget ${baseUrl}../configs/cp/nginx/fastcgi_cache.conf -O /etc/nginx/conf.d/fastcgi_cache.conf
-        wget ${baseUrl}../configs/cp/nginx/default.conf -O /etc/nginx/conf.d/SITES_ENABLED/default.conf
-        wget ${baseUrl}../configs/cp/nginx/skip_cache.conf -O /etc/nginx/conf.d/SITES_ENABLED/skip_cache.conf
         wget ${baseUrl}../scripts/checkNginxStatus.sh -O ~/checkNginxStatus.sh
         chmod +x ~/checkNginxStatus.sh
         crontab -l | { cat; echo "* * * * * /bin/bash ~/checkNginxStatus.sh"; } | crontab
