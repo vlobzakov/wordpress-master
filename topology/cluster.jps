@@ -61,8 +61,11 @@ nodes:
     
 onAfterScaleOut[nodeGroup:cp]:
   forEach(event.response.nodes):
-    cmd [${@i.id}]: sudo jem service restart
-    setNodeDisplayName [${@i.id}]: AppServer
+    - setNodeDisplayName [${@i.id}]: AppServer
+    - log: App Servers Setup
+    - install: ${baseUrl}../scripts/setup-CP.jps?_r=${fn.random}
+      settings:
+        TARGET_NODES: ${@i.id}
 
 onAfterScaleOut[nodeGroup:bl]:
   forEach(event.response.nodes):
@@ -103,12 +106,13 @@ onInstall:
   - log: Load Balancer Setup
   - install: ${baseUrl}../scripts/setup-BL.jps?_r=${fn.random}
 
-  - log: Redis Setup
-  - cmd [nosqldb]: jem passwd set -p ${globals.REDIS_PASS}
-    user: root
-
   - log: App Servers Setup
   - install: ${baseUrl}../scripts/setup-CP.jps?_r=${fn.random}
+    settings:
+      TARGET_NODES: cp
+      
+  - log: Wordpress Sites Configuration Setup
+  - install: ${baseUrl}../scripts/setup-SITES.jps?_r=${fn.random}
       
   - log: Auto Scaling Triggers
   - script: "${baseUrl}../scripts/addTriggers.js"
