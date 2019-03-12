@@ -92,7 +92,6 @@ onInstall:
   - log: Set Node Display Name
   - setNodeDisplayName [bl]: Load balancer
   - setNodeDisplayName [cp]: AppServer
-  - setNodeDisplayName [nosqldb]: ObjectCache
   - setNodeDisplayName [storage]: Storage
 
   - log: DB Galera  Setup
