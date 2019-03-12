@@ -38,3 +38,6 @@ onInstall:
     settings:
       TARGET_NODES: cp
 
+  - log: Wordpress Sites Configuration Setup
+  - install: ${baseUrl}../scripts/setup-SITES.jps?_r=${fn.random}
+
