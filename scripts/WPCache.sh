@@ -1,11 +1,13 @@
 #!/bin/bash -e
 
+purge=false;
 pgcache=false;
 objectcache=false;
 edgeportCDN=false;
 wpmu=false;
 
 ARGUMENT_LIST=(
+    "purge"
     "pgcache"
     "objectcache"
     "edgeportCDN"
@@ -29,6 +31,11 @@ eval set --$opts
 
 while [[ $# -gt 0 ]]; do
     case "$1" in
+        --purge)
+            purge=$2
+            shift 2
+            ;;
+
         --pgcache)
             pgcache=$2
             shift 2
@@ -87,10 +94,12 @@ lOG="/var/log/run.log"
 COMPUTE_TYPE=$(grep "COMPUTE_TYPE=" /etc/jelastic/metainf.conf | cut -d"=" -f2)
 
 if [[ ${COMPUTE_TYPE} == *"llsmp"* || ${COMPUTE_TYPE} == *"litespeed"* ]] ; then
-	wp plugin install litespeed-cache --activate --path=${SERVER_WEBROOT}
+	/usr/local/bin/wp plugin install litespeed-cache --activate --path=${SERVER_WEBROOT}
+	CACHE_FLUSH="/usr/local/bin/wp lscache-purge all"
         WPCACHE='lscwp';
 elif [[ ${COMPUTE_TYPE} == *"lemp"* || ${COMPUTE_TYPE} == *"nginx"* ]] ; then
-	wp plugin install w3-total-cache --activate --path=${SERVER_WEBROOT}
+	/usr/local/bin/wp plugin install w3-total-cache --activate --path=${SERVER_WEBROOT}
+	CACHE_FLUSH="/usr/local/bin/wp lscache-purge all"
         WPCACHE="w3tc";
 else
         echo 'Compute type is not defined';
@@ -100,10 +109,8 @@ fi
 function checkCdnStatus () {
 if [ $WPCACHE == 'w3tc' ] ; then
 	CDN_ENABLE_CMD="/usr/local/bin/wp w3-total-cache option set cdn.enabled true --type=boolean"
-	CACHE_FLUSH="/usr/local/bin/wp w3-total-cache flush all"
 elif [ $WPCACHE == 'lscwp' ] ; then
 	CDN_ENABLE_CMD="/usr/local/bin/wp lscache-admin set_option cdn true"
-	CACHE_FLUSH="/usr/local/bin/wp lscache-purge all"
 fi
 cat > ~/checkCdnStatus.sh <<EOF
 #!/bin/bash
@@ -120,6 +127,10 @@ chmod +x ~/checkCdnStatus.sh
 crontab -l | { cat; echo "* * * * * /bin/bash ~/checkCdnStatus.sh ${CDN_URL}"; } | crontab
 }
 
+if [ $purge == 'true' ] ; then
+	${CACHE_FLUSH} --path=${SERVER_WEBROOT} &>> /var/log/run.log
+	/usr/local/bin/wp cache flush --path=${SERVER_WEBROOT} &>> /var/log/run.log
+fi
 
 if [ $pgcache == 'true' ] ; then
   case $WPCACHE in
@@ -134,10 +145,6 @@ if [ $pgcache == 'true' ] ; then
           $LSCWP_OPTION_SET optm_qs_rm true --path=${SERVER_WEBROOT} &>> $lOG
           $LSCWP_OPTION_SET optm_emoji_rm true --path=${SERVER_WEBROOT} &>> $lOG
           $LSCWP_OPTION_SET esi_enabled true --path=${SERVER_WEBROOT} &>> $lOG
-          ;;
-     *)
-	  echo "-- $WPCACHE cache is not supported" &>> $lOG
-          exit 1
           ;;
   esac
 fi
@@ -156,10 +163,6 @@ if [ $objectcache == 'true' ] ; then
           $LSCWP_OPTION_SET cache_object_host ${REDIS_HOST} --path=${SERVER_WEBROOT} &>> /var/log/run.log
           $LSCWP_OPTION_SET cache_object_port 6379 --path=${SERVER_WEBROOT} &>> /var/log/run.log
           ;;
-     *)
-          echo "-- $WPCACHE cache is not supported" &>> $lOG
-          exit 1
-          ;;
   esac
 fi
 
@@ -177,10 +180,6 @@ if [ $edgeportCDN == 'true' ] ; then
           $LSCWP_OPTION_SET cdn false --path=${SERVER_WEBROOT} &>> /var/log/run.log
 	  $LSCWP_OPTION_SET litespeed-cache-cdn_mapping[url][0] http://${CDN_URL}/ --path=${SERVER_WEBROOT} &>> /var/log/run.log
           $LSCWP_OPTION_SET cdn_ori "//${CDN_ORI}/" --path=${SERVER_WEBROOT} &>> /var/log/run.log
-          ;;
-     *)
-          echo "-- $WPCACHE cache is not supported" &>> $lOG
-          exit 1
           ;;
   esac
 fi
