@@ -1,8 +1,7 @@
 jpsType: update
 jpsVersion: '1.1'
-name: Multisites addon for Wordpress cluster
-description: Multisites addon for Wordpress cluster
-logo: https://raw.githubusercontent.com/jelastic-jps/wordpress-cluster/master/images/wp-cluster.png
+name: Addon for cache purge
+description: Addon for cache purge
 baseUrl: https://raw.githubusercontent.com/sych74/wordpress-master/master
 
 onInstall:
@@ -25,8 +24,10 @@ onInstall:
       nodeGroup: cp
       envName: ${globals.env1}
       commandList:
-        - command: |-
-            echo "-----check------" > /tmp/1
+         - command: |-
+            curl -o ~/wp https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar && chmod +x ~/wp
+            wget ${baseUrl}/scripts/WPCache.sh?_r=${fn.random} -O ~/WPCache.sh &>> /var/log/run.log
+            bash ~/WPCache.sh --purge true &>> /var/log/run.log
 
     - if (globals.env2):
         api: env.control.ExecCmdByGroup
@@ -34,4 +35,6 @@ onInstall:
         envName: ${globals.env2}
         commandList:
           - command: |-
-              echo "-----check------" > /tmp/1
+              curl -o ~/wp https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar && chmod +x ~/wp
+              wget ${baseUrl}/scripts/WPCache.sh?_r=${fn.random} -O ~/WPCache.sh &>> /var/log/run.log
+              bash ~/WPCache.sh --purge true &>> /var/log/run.log
