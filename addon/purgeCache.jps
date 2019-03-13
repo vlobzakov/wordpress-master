@@ -1,0 +1,37 @@
+jpsType: update
+jpsVersion: '1.1'
+name: Multisites addon for Wordpress cluster
+description: Multisites addon for Wordpress cluster
+logo: https://raw.githubusercontent.com/jelastic-jps/wordpress-cluster/master/images/wp-cluster.png
+baseUrl: https://raw.githubusercontent.com/sych74/wordpress-master/master
+
+onInstall:
+    - script: | 
+        var env1 = '${env.name}'.match(/^(.*?)(-1)?$/)[1],           
+            env2 = env1 + "-1",
+            resp = jelastic.env.control.GetEnvInfo(env2, session);
+        
+        return { 
+          result: 0, 
+          env1: env1,
+          env2: resp.result == 0 ? env2 : ""
+        };
+    
+    - setGlobals:
+        env1: ${response.env1}
+        env2: ${response.env2}
+
+    - api: env.control.ExecCmdByGroup
+      nodeGroup: cp
+      envName: ${globals.env1}
+      commandList:
+        - command: |-
+            echo "-----check------" > /tmp/1
+
+    - if (globals.env2):
+        api: env.control.ExecCmdByGroup
+        nodeGroup: cp
+        envName: ${globals.env2}
+        commandList:
+          - command: |-
+              echo "-----check------" > /tmp/1
