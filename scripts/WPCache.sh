@@ -20,7 +20,7 @@ ARGUMENT_LIST=(
 
 )
 
-WP=`which wp`
+WP='~/wp'
 
 # read arguments
 opts=$(getopt \
@@ -89,19 +89,19 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
-W3TC_OPTION_SET="${WP} w3-total-cache option set"
-LSCWP_OPTION_SET="${WP} lscache-admin set_option"
+W3TC_OPTION_SET="~/wp w3-total-cache option set"
+LSCWP_OPTION_SET="~/wp lscache-admin set_option"
 lOG="/var/log/run.log"
 
 COMPUTE_TYPE=$(grep "COMPUTE_TYPE=" /etc/jelastic/metainf.conf | cut -d"=" -f2)
 
 if [[ ${COMPUTE_TYPE} == *"llsmp"* || ${COMPUTE_TYPE} == *"litespeed"* ]] ; then
-	${WP} plugin install litespeed-cache --activate --path=${SERVER_WEBROOT}
-	CACHE_FLUSH="${WP} lscache-purge all"
+	~/wp plugin install litespeed-cache --activate --path=${SERVER_WEBROOT}
+	CACHE_FLUSH="~/wp lscache-purge all"
         WPCACHE='lscwp';
 elif [[ ${COMPUTE_TYPE} == *"lemp"* || ${COMPUTE_TYPE} == *"nginx"* ]] ; then
-	${WP} plugin install w3-total-cache --activate --path=${SERVER_WEBROOT}
-	CACHE_FLUSH="${WP} lscache-purge all"
+	~/wp plugin install w3-total-cache --activate --path=${SERVER_WEBROOT}
+	CACHE_FLUSH="~/wp lscache-purge all"
         WPCACHE="w3tc";
 else
         echo 'Compute type is not defined';
@@ -110,9 +110,9 @@ fi
 
 function checkCdnStatus () {
 if [ $WPCACHE == 'w3tc' ] ; then
-	CDN_ENABLE_CMD="${WP} w3-total-cache option set cdn.enabled true --type=boolean"
+	CDN_ENABLE_CMD="~/wp w3-total-cache option set cdn.enabled true --type=boolean"
 elif [ $WPCACHE == 'lscwp' ] ; then
-	CDN_ENABLE_CMD="${WP} lscache-admin set_option cdn true"
+	CDN_ENABLE_CMD="~/wp lscache-admin set_option cdn true"
 fi
 cat > ~/checkCdnStatus.sh <<EOF
 #!/bin/bash
@@ -121,7 +121,7 @@ cat > ~/checkCdnStatus.sh <<EOF
     then
       ${CDN_ENABLE_CMD} --path=${SERVER_WEBROOT} &>> /var/log/run.log
       ${CACHE_FLUSH} --path=${SERVER_WEBROOT} &>> /var/log/run.log
-      ${WP} cache flush --path=${SERVER_WEBROOT} &>> /var/log/run.log
+      ~/wp cache flush --path=${SERVER_WEBROOT} &>> /var/log/run.log
       crontab -l | sed "/checkCdnStatus/d" | crontab -
     fi
 EOF
@@ -131,7 +131,7 @@ crontab -l | { cat; echo "* * * * * /bin/bash ~/checkCdnStatus.sh ${CDN_URL}"; }
 
 if [ $purge == 'true' ] ; then
 	${CACHE_FLUSH} --path=${SERVER_WEBROOT} &>> /var/log/run.log
-	${WP} cache flush --path=${SERVER_WEBROOT} &>> /var/log/run.log
+	~/wp cache flush --path=${SERVER_WEBROOT} &>> /var/log/run.log
 fi
 
 if [ $pgcache == 'true' ] ; then
@@ -178,7 +178,7 @@ if [ $edgeportCDN == 'true' ] ; then
           ;;
     lscwp)
 	  checkCdnStatus;
-	  CDN_ORI=$(/usr/local/bin/wp option get siteurl --path=${SERVER_WEBROOT} | cut -d'/' -f3)
+	  CDN_ORI=$(~/wp option get siteurl --path=${SERVER_WEBROOT} | cut -d'/' -f3)
           $LSCWP_OPTION_SET cdn false --path=${SERVER_WEBROOT} &>> /var/log/run.log
 	  $LSCWP_OPTION_SET litespeed-cache-cdn_mapping[url][0] http://${CDN_URL}/ --path=${SERVER_WEBROOT} &>> /var/log/run.log
           $LSCWP_OPTION_SET cdn_ori "//${CDN_ORI}/" --path=${SERVER_WEBROOT} &>> /var/log/run.log
@@ -189,16 +189,16 @@ fi
 if [ $wpmu == 'true' ] ; then
   case $WPCACHE in
     w3tc)
-          ${WP} plugin deactivate w3-total-cache --path=${SERVER_WEBROOT} &>> /var/log/run.log
+          ~/wp plugin deactivate w3-total-cache --path=${SERVER_WEBROOT} &>> /var/log/run.log
 	  [[ ${MODE} == 'subdir' ]] && ${WP} core multisite-convert --path=${SERVER_WEBROOT} &>> /var/log/run.log
 	  [[ ${MODE} == 'subdom' ]] && ${WP} core multisite-convert --path=${SERVER_WEBROOT} --subdomains &>> /var/log/run.log
-	  ${WP} plugin activate w3-total-cache --path=${SERVER_WEBROOT} &>> /var/log/run.log
+	  ~/wp plugin activate w3-total-cache --path=${SERVER_WEBROOT} &>> /var/log/run.log
           ;;
     lscwp)
-          ${WP} plugin deactivate litespeed-cache --path=${SERVER_WEBROOT} &>> /var/log/run.log
+          ~/wp plugin deactivate litespeed-cache --path=${SERVER_WEBROOT} &>> /var/log/run.log
           [[ ${MODE} == 'subdir' ]] && ${WP} core multisite-convert --path=${SERVER_WEBROOT} &>> /var/log/run.log
           [[ ${MODE} == 'subdom' ]] && ${WP} core multisite-convert --path=${SERVER_WEBROOT} --subdomains &>> /var/log/run.log
-          ${WP} plugin activate litespeed-cache --path=${SERVER_WEBROOT} &>> /var/log/run.log
+          ~/wp plugin activate litespeed-cache --path=${SERVER_WEBROOT} &>> /var/log/run.log
           ;;
   esac
 fi
