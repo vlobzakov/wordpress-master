@@ -103,7 +103,7 @@ if [[ ${COMPUTE_TYPE} == *"llsmp"* || ${COMPUTE_TYPE} == *"litespeed"* ]] ; then
         WPCACHE='lscwp';
 elif [[ ${COMPUTE_TYPE} == *"lemp"* || ${COMPUTE_TYPE} == *"nginx"* ]] ; then
 	${WP} plugin install w3-total-cache --activate --path=${SERVER_WEBROOT}
-	CACHE_FLUSH="${WP} lscache-purge all"
+	CACHE_FLUSH="${WP} w3-total-cache flush all"
         WPCACHE="w3tc";
 else
         echo 'Compute type is not defined';
