@@ -40,9 +40,9 @@ actions:
         wget ${baseUrl}../configs/cp/nginx/nossl.conf -O /etc/nginx/conf.d/nossl.conf
         wget ${baseUrl}../configs/cp/nginx/ssl.conf.disabled -O /etc/nginx/conf.d/ssl.conf.disabled
         wget ${baseUrl}../configs/cp/nginx/fastcgi_cache.conf -O /etc/nginx/conf.d/fastcgi_cache.conf
-        wget ${baseUrl}../scripts/checkNginxStatus.sh -O ~/checkNginxStatus.sh
-        chmod +x ~/checkNginxStatus.sh
-        crontab -l | { cat; echo "* * * * * /bin/bash ~/checkNginxStatus.sh"; } | crontab
+        wget ${baseUrl}../scripts/checkNginxStatus.sh -O ~/bin/checkNginxStatus.sh
+        chmod +x ~/bin/checkNginxStatus.sh
+        crontab -l | { cat; echo "* * * * * /bin/bash ~/bin/checkNginxStatus.sh"; } | crontab
         
   wp-cli:
     - cmd[${globals.TARGET_NODES}]: |- 
