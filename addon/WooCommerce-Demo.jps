@@ -10,12 +10,12 @@ onInstall:
       cd ${SERVER_WEBROOT}
       cp ${SERVER_WEBROOT}/wp-config.php ~/
       rm -rf ${SERVER_WEBROOT}/*
-      wget -qO- '${baseUrl}/data/data.tar.gz' | tar xz -C ${SERVER_WEBROOT} &>> /var/log/run.log
+      wget -qO- '${baseUrl}/data/demo.tar.gz' | tar xz -C ${SERVER_WEBROOT} &>> /var/log/run.log
       cp ~/wp-config.php ${SERVER_WEBROOT} &>> /var/log/run.log
       wp db export --tables=wp_users ~/wp_users.sql --path=${SERVER_WEBROOT} &>> /var/log/run.log
       wp db export --tables=wp_usermeta ~/wp_usermeta.sql --path=${SERVER_WEBROOT} &>> /var/log/run.log
-      wget ${baseUrl}/data/dummy-data.sql -O ~/dummy-data.sql &>> /var/log/run.log
-      wp db import ~/dummy-data.sql --path=${SERVER_WEBROOT} &>> /var/log/run.log
+      wget ${baseUrl}/data/demo.sql -O ~/demo.sql &>> /var/log/run.log
+      wp db import ~/demo.sql --path=${SERVER_WEBROOT} &>> /var/log/run.log
       wp db import ~/wp_users.sql --path=${SERVER_WEBROOT} &>> /var/log/run.log
       wp db import ~/wp_usermeta.sql --path=${SERVER_WEBROOT} &>> /var/log/run.log
       wp search-replace test-wordpress-test.demo.jelastic.com ${env.domain} --all-tables --path=${SERVER_WEBROOT} &>> /var/log/run.log
