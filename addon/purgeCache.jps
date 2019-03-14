@@ -25,7 +25,7 @@ onInstall:
       envName: ${globals.env1}
       commandList:
          - command: |-
-            wget ${baseUrl}/scripts/WPCache.sh?_r=${fn.random} -O ~/WPCache.sh &>> /var/log/run.log
+            wget ${baseUrl}/scripts/WPCache.sh?_r=${fn.random} -O ~/bin/WPCache.sh &>> /var/log/run.log
             bash ~/bin/WPCache.sh --purge true &>> /var/log/run.log
 
     - if (globals.env2):
