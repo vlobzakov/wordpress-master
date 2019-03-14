@@ -15,6 +15,8 @@ onInstall:
       - redis: 
          PHP_CONFIG_PATH: /usr/local/lsws/lsphp73/etc/php.d
 
+  - wp-cli
+
 actions:
   redis:
     - cmd[${globals.TARGET_NODES}]: |-
@@ -42,3 +44,8 @@ actions:
         chmod +x ~/checkNginxStatus.sh
         crontab -l | { cat; echo "* * * * * /bin/bash ~/checkNginxStatus.sh"; } | crontab
         
+  wp-cli:
+    - cmd[${globals.TARGET_NODES}]: |- 
+        [ ! -d $HOME/bin ] && mkdir $HOME/bin
+        curl -o $HOME/bin/wp https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar && chmod +x $HOME/bin/wp
+        echo "export PATH=$PATH:$HOME/bin/" >> $HOME/.bash_profile
