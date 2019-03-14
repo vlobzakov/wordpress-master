@@ -95,6 +95,8 @@ lOG="/var/log/run.log"
 
 COMPUTE_TYPE=$(grep "COMPUTE_TYPE=" /etc/jelastic/metainf.conf | cut -d"=" -f2)
 
+cd ${SERVER_WEBROOT};
+
 if [[ ${COMPUTE_TYPE} == *"llsmp"* || ${COMPUTE_TYPE} == *"litespeed"* ]] ; then
 	${WP} plugin install litespeed-cache --activate --path=${SERVER_WEBROOT}
 	CACHE_FLUSH="${WP} lscache-purge all"
