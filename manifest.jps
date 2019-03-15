@@ -1,7 +1,7 @@
 version: 1.1
 type: install
 id: wp-cluster-startup
-name: WordPress Cluster
+name: WordPress
 description:
   text: WordPress Cluster package provides integrated autoscaling and high availability for development and production environments. 
     The platform automatically deploys and configures chosen tolopology and required addons at specified regions.    
@@ -83,6 +83,7 @@ globals:
   PROTOCOL: http
   WP_ADMIN_PASS: "${fn.password(10)}"
   MU_REGIONS: false
+  CLUSTER_TYPE: region
 
 onInstall:
   - if (!${settings.ls-addon}):
@@ -111,6 +112,8 @@ onInstall:
   - if (${response.regions.length} > 1):
       setGlobals:
         MU_REGIONS: true
+        CLUSTER_TYPE: multiregion
+        
   - forEach(response.regions):
       run: 
         envName: ${settings.envName}
@@ -135,6 +138,23 @@ onInstall:
 
 actions: 
   run:
+    - script: |
+        var resp, result;
+
+        resp = jelastic.env.control.GetRegions(appid, session);
+        if (resp.result != 0) return resp;
+        resp = resp.array;
+
+        for (var i = 0, n = resp.length; i < n; i++) {
+          for (var k = 0, l = resp[i].hardNodeGroups.length; k < l; k++) {
+            if (resp[i].hardNodeGroups[k].uniqueName == '${this.region}') {
+              return {result: 0, domain: resp[i].domain}
+            }
+          }
+        }
+    - setGlobals:
+        REGION-${this.index}: ${response.domain}
+
     - if (!${this.index}):
         setup-cluster: 
           envName: ${this.envName}
@@ -312,4 +332,4 @@ actions:
             wget ${baseUrl}/scripts/WPCache.sh?_r=${fn.random} -O ~/bin/WPCache.sh &>> /var/log/run.log
             bash ~/bin/WPCache.sh --pgcache true --objectcache true --REDIS_HOST 127.0.0.1
 
-success: /text/success.md
+success: /text/${settings.topology}/${globals.CLUSTER_TYPE}.md?_r=${fn.random}
