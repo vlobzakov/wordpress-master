@@ -1,12 +1,14 @@
-Standalone Environment
+**Standalone Environment
 
 [${globals.PROTOCOL}://${settings.envName}.${globals.REGION-0}/wp-admin/](${globals.PROTOCOL}://${settings.envName}.${globals.REGION-0}/wp-admin/)
 
-Wordpress credentinal
+**Wordpress credentinal
 
 **Admin Panel**: [${globals.PROTOCOL}://${settings.envName}.${globals.REGION-0}/wp-admin/](${globals.PROTOCOL}://${settings.envName}.${globals.REGION-0}/wp-admin/)  
 **Login**: admin  
 **Password**: ${globals.WP_ADMIN_PASS}  
+
+**DataBase credentinal
 
 
 
