@@ -1,0 +1,73 @@
+jpsType: update
+logo: https://download.jelastic.com/public.php?service=files&t=3da2215839f82aa50d3d961271cd1cb9&download
+name: Jelastic Add-ons for Wordpress
+description: Jelastic Add-ons for Wordpress
+baseUrl: 
+settings:
+  domain:
+      fields:
+        - name: new_domain
+          caption: New Domain
+          type: string
+          default: ""
+          required: true
+  wpmu:
+    fields:
+    - name: mode
+      caption: Multisites mode
+      type: radio-fieldset
+      values:
+        subdir: SubDirectories
+        subdom: SubDomain
+      default: subdir
+
+onInstall:
+      
+  - installAddon:
+      id: domain-addon
+      nodeGroup: cp
+
+  - installAddon:
+      id: wpmu-addon
+      nodeGroup: cp
+
+  - installAddon:
+      id: purge-cache-addon
+      nodeGroup: cp
+
+addons:
+  - id: domain-addon
+    name: Addon for domain replace
+    description: Addon for domain replace
+    buttons:
+      settings: domain
+      procedure: domain-replace
+      caption: Fomain replace
+      logsPath: "/var/log/run.log"
+      successText: Domain successfully replaced.
+
+  - id: wpmu-addon
+    name: Addon for convert to Multisite
+    description: Addon for convert to Multisite
+    buttons:
+      settings: wpmu
+      procedure: domain-replace
+      caption: Run build scripts
+      logsPath: "/var/log/run.log"
+      successText: Multisite network successfully ini.
+
+  - id: purge-cache-addon
+    name: Addon for all cache purge
+    description: Addon for all cache purge
+    buttons:
+      procedure: cache-purge
+      caption: All cache purge replace
+      logsPath: "/var/log/run.log"
+      successText: All cache successfully purged.
+
+
+
+actions:
+  domain-replace:
+    - log: test-----------------
+    
