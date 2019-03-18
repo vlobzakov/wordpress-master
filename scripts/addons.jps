@@ -2,7 +2,7 @@ jpsType: update
 logo: https://download.jelastic.com/public.php?service=files&t=3da2215839f82aa50d3d961271cd1cb9&download
 name: Jelastic Add-ons for Wordpress
 description: Jelastic Add-ons for Wordpress
-baseUrl: 
+baseUrl: https://raw.githubusercontent.com/sych74/wordpress-master/master
 settings:
   domain:
       fields:
@@ -34,27 +34,33 @@ onInstall:
   - installAddon:
       id: purge-cache-addon
       nodeGroup: cp
+      
+  - installAddon:
+      id: cdn
+      nodeGroup: cp
+  
 
 addons:
   - id: domain-addon
-    name: Addon for domain replace
-    description: Addon for domain replace
+    name: Domain replace for WordPress
+    description: Domain replace for WordPress
     buttons:
       settings: domain
-      procedure: domain-replace
-      caption: Fomain replace
+      procedure: domain
+      caption: Domain replace
       logsPath: "/var/log/run.log"
       successText: Domain successfully replaced.
 
   - id: wpmu-addon
-    name: Addon for convert to Multisite
-    description: Addon for convert to Multisite
+    name: Convert WordPress to Multisite Network
+    description: Convert WordPress to Multisite Network
+    logo: 4{baseUrl}/images/wordpress-multisite.png
     buttons:
       settings: wpmu
-      procedure: domain-replace
+      procedure: wpmu
       caption: Run build scripts
       logsPath: "/var/log/run.log"
-      successText: Multisite network successfully ini.
+      successText: Multisite network successfully install.
 
   - id: purge-cache-addon
     name: Addon for all cache purge
@@ -65,9 +71,29 @@ addons:
       logsPath: "/var/log/run.log"
       successText: All cache successfully purged.
 
-
+  - id: cdn
+    name: Edgeport - Premium CDN for WordPress
+    homepage: https://edgeport.net
+    description:
+      short: Edgeport - Premium CDN
+    logo: https://github.com/edgeport/cdn/blob/master/images/edgeport-white-logo-70x70-2.png
+    buttons:
+      procedure: cdn
+      caption: Install Edgeport - Premium CDN
+      logsPath: "/var/log/run.log"
+      successText: Cdn successfully installed.
 
 actions:
-  domain-replace:
-    - log: test-----------------
+  cdn:
+    - install: ${baseUrl}/addon/edgeportCDN.jps?_r=${fn.random}
+    
+  wpmu:
+    - install: ${baseUrl}/addon/WPMU.jps?_r=${fn.random}
+      settings:
+        mode: ${settings.mode}  
+
+  domain:
+    - install: ${baseUrl}/addon/WPMU.jps?_r=${fn.random}
+      settings:
+        mode: ${settings.mode}  
     
