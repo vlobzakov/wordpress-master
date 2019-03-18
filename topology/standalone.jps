@@ -40,4 +40,6 @@ onInstall:
 
   - log: Wordpress Sites Configuration Setup
   - install: ${baseUrl}../scripts/setup-SITES.jps?_r=${fn.random}
-
+  
+  - log: Wordpress Add-ons Installation
+  - install: ${baseUrl}../scripts/addons.jps?_r=${fn.random}
