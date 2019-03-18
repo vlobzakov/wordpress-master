@@ -278,16 +278,6 @@ actions:
         password: ${globals.SYNC_PASS}
         delay: 10
 
-  registration-on-CloudFlare:
-    - install: ${baseUrl}/addon/cloudflare-DNS.jps?_r=${fn.random}
-      envName: ${settings.envName}
-      nodeGroup: ${globals.cdn-nodeGroup}
-      settings:
-        custom_domain: ${settings.customDomains}
-        cf_email: ${settings.cf_email}
-        cf_key: ${settings.cf_key}
-        cf_zone_id: ${settings.cf_zone_id}
-
   install-LE-addon:
     - install: https://github.com/jelastic-jps/lets-encrypt/blob/master/manifest.jps?_r=${fn.random}
       envName: ${settings.envName}
