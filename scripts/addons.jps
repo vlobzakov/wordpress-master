@@ -114,8 +114,10 @@ addons:
     logo: https://github.com/edgeport/cdn/blob/master/images/woo_logo.png.png
     buttons:
       procedure: woocommerce
-      caption: Deploy WooCommerce Demo Data
+      caption: Install
+      loadingText: Installing...
       logsPath: "/var/log/run.log"
+      confirmText: Do you want to install WooCommerce demo data?
       successText: WooCommerce demo data successfully deployed.
 
   - id: letsencrypt-ssl-addon
@@ -133,7 +135,7 @@ addons:
       caption: Install
       logsPath: "/var/log/run.log"
       confirmText: Do you want to install Let's Encrypt addon?
-      successText: WooCommerce demo data successfully deployed.
+      successText: Let's Encrypt addon successfully deployed.
 
 actions:
   cdn:
