@@ -102,21 +102,21 @@ addons:
 
 actions:
   cdn:
-    - install: ${globals.ADDONS_BASE_URL}/addon/edgeportCDN.jps?_r=${fn.random}
+    - install: ${globals.ADDONS_BASE_URL}/edgeportCDN.jps?_r=${fn.random}
     
   wpmu:
-    - install: ${globals.ADDONS_BASE_URL}/addon/WPMU.jps?_r=${fn.random}
+    - install: ${globals.ADDONS_BASE_URL}/WPMU.jps?_r=${fn.random}
       settings:
         mode: ${settings.mode}  
 
   domain:
-    - install: ${globals.ADDONS_BASE_URL}/addon/Domain.jps?_r=${fn.random}
+    - install: ${globals.ADDONS_BASE_URL}/Domain.jps?_r=${fn.random}
       settings:
         new_domain: ${settings.new_domain}
    
   cache:
-    - install: ${globals.ADDONS_BASE_URL}/addon/purgeCache.jps?_r=${fn.random}
+    - install: ${globals.ADDONS_BASE_URL}/purgeCache.jps?_r=${fn.random}
     
   woocommerce:
-    - install: ${globals.ADDONS_BASE_URL}/addon/WooCommerce-Demo.jps?_r=${fn.random}
+    - install: ${globals.ADDONS_BASE_URL}/WooCommerce-Demo.jps?_r=${fn.random}
     - cache
