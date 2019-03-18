@@ -58,7 +58,7 @@ addons:
     buttons:
       settings: wpmu
       procedure: wpmu
-      caption: Run build scripts
+      caption: Convert to multisite
       logsPath: "/var/log/run.log"
       successText: Multisite network successfully install.
 
