@@ -15,23 +15,26 @@ settings:
         subdom: SubDomain
       default: subdir
 
+globals:
+  MODE: ${settings.mode}
+
 onInstall:
   - if (/lemp/.test("${nodes.cp.nodeType}") || /nginxphp/.test("${nodes.cp.nodeType}")):
-    - if ('${settings.mode}' == 'subdir'):
+    - if ('${globals.MODE}' == 'subdir'):
         cmd[${nodes.cp.master.id}]: |-
           wget ${baseUrl}/configs/cp/nginx/subdir.conf -O /etc/nginx/conf.d/SITES_ENABLED/subdir.conf
           sudo /etc/init.d/nginx reload
-    - if ('${settings.mode}' == 'subdom'):
+    - if ('${globals.MODE}' == 'subdom'):
         cmd[${nodes.cp.master.id}]: |-
           wget ${baseUrl}/configs/cp/nginx/subdom.conf -O /etc/nginx/conf.d/SITES_ENABLED/subdom.conf
           sudo /etc/init.d/nginx reload
 
   - if (/llsmp/.test("${nodes.cp.nodeType}") || /litespeed/.test("${nodes.cp.nodeType}")):
-    - if ('${settings.mode}' == 'subdir'):
+    - if ('${globals.MODE}' == 'subdir'):
         cmd[${nodes.cp.master.id}]: |-
           wget ${baseUrl}/configs/cp/litespeed/.htaccess_subdir -O /var/www/webroot/ROOT/.htaccess_subdir
           sudo jem service restart
-    - if ('${settings.mode}' == 'subdom'):
+    - if ('${globals.MODE}' == 'subdom'):
         cmd[${nodes.cp.master.id}]: |-
           wget ${baseUrl}/configs/cp/litespeed/.htaccess_subdom -O /var/www/webroot/ROOT/.htaccess_subdom
           sudo jem service restart
