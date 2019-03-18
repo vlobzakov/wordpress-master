@@ -20,6 +20,14 @@ settings:
         subdom: SubDomain
       default: subdir
       
+  letsencrypt:
+    fields:
+    - type: string
+      name: customDomains
+      regex: "^([a-zA-Z0-9][a-zA-Z0-9-]{0,61}[a-zA-Z0-9]?(\\.[a-zA-Z0-9-]{1,}){1,6}[,|;]?){1,100}$"
+      caption: External Domain(s)
+      required: false
+      
 onInstall:
   - setGlobals:
       ADDONS_BASE_URL: https://raw.githubusercontent.com/sych74/wordpress-master/master/addon
@@ -43,6 +51,17 @@ onInstall:
   - installAddon:
       id: woocommerce
       nodeGroup: cp
+
+
+  - if ( ${nodes.bl} ):
+    - installAddon:
+        id: letsencrypt-ssl-addon
+        nodeGroup: bl
+
+  - if ( ! ${nodes.bl} ):
+    - installAddon:
+        id: letsencrypt-ssl-addon
+        nodeGroup: cp
 
 addons:
   - id: domain-addon
@@ -92,13 +111,29 @@ addons:
     homepage: https://woocommerce.com/
     description:
       short: WooCommerce demo data for WordPress
-    logo: https://github.com/edgeport/cdn/blob/master/images/edgeport-white-logo-70x70-2.png
+    logo: https://github.com/edgeport/cdn/blob/master/images/woo_logo.png.png
     buttons:
       procedure: woocommerce
       caption: Deploy WooCommerce Demo Data
       logsPath: "/var/log/run.log"
       successText: WooCommerce demo data successfully deployed.
 
+  - id: letsencrypt-ssl-addon
+    description:
+      text: https://raw.githubusercontent.com/jelastic-jps/lets-encrypt/master/text/description.md
+      short: Free tool to configure support of secured SSL connection for an environment,
+              by either internal or custom domain name.
+    name: Let's Encrypt Free SSL
+    homepage: https://github.com/jelastic-jps/lets-encrypt
+    logo: https://raw.githubusercontent.com/jelastic-jps/lets-encrypt/master/images/lets-encrypt.png
+    buttons:
+      settings: letsencrypt
+      procedure: letsencrypt-ssl
+      loadingText: Installing...
+      caption: Install
+      logsPath: "/var/log/run.log"
+      confirmText: Do you want to install Let's Encrypt addon?
+      successText: WooCommerce demo data successfully deployed.
 
 actions:
   cdn:
@@ -120,3 +155,8 @@ actions:
   woocommerce:
     - install: ${globals.ADDONS_BASE_URL}/WooCommerce-Demo.jps?_r=${fn.random}
     - cache
+
+  letsencrypt-ssl:
+    - install: https://github.com/jelastic-jps/lets-encrypt/blob/master/manifest.jps?_r=${fn.random}
+      settings:
+        customDomains: ${settings.customDomains}
