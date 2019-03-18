@@ -1,6 +1,7 @@
 **Standalone Environments
 
 [${globals.PROTOCOL}://${settings.envName}.${globals.REGION-0}/](${globals.PROTOCOL}://${settings.envName}.${globals.REGION-0}/)
+
 [${globals.PROTOCOL}://${settings.envName}-1.${globals.REGION-1}/](${globals.PROTOCOL}://${settings.envName}-1.${globals.REGION-1}/)
 
 **Wordpress credentinal
@@ -15,6 +16,7 @@
 **Password**: ${globals.DB_PASS}  
 
 Asynchronous Master-master Replication successfully deployed between database servers
+
 Files synchronization successfully deployed between local storages
 
 To add custom domain name follow the steps described in the [documentation](http://docs.jelastic.com/custom-domains).
