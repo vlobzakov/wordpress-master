@@ -63,11 +63,11 @@ addons:
       successText: Multisite network successfully install.
 
   - id: purge-cache-addon
-    name: Addon for all cache purge
-    description: Addon for all cache purge
+    name: Purge all cache
+    description: Purge all cache
     buttons:
-      procedure: cache-purge
-      caption: All cache purge replace
+      procedure: cache
+      caption: Purge all cache
       logsPath: "/var/log/run.log"
       successText: All cache successfully purged.
 
@@ -93,7 +93,9 @@ actions:
         mode: ${settings.mode}  
 
   domain:
-    - install: ${baseUrl}/addon/WPMU.jps?_r=${fn.random}
+    - install: ${baseUrl}/addon/Domain.jps?_r=${fn.random}
       settings:
-        mode: ${settings.mode}  
-    
+        new_domain: ${settings.new_domain}
+   
+  cache:
+    - install: ${baseUrl}/addon/purgeCache.jps?_r=${fn.random}  
