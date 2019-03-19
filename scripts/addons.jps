@@ -52,13 +52,12 @@ onInstall:
       id: woocommerce
       nodeGroup: cp
 
-
-  - if ( ${nodes.bl} ):
+  - if (nodes.bl):
     - installAddon:
         id: letsencrypt-ssl-addon
         nodeGroup: bl
 
-  - if ( ! ${nodes.bl} ):
+  - if (!nodes.bl):
     - installAddon:
         id: letsencrypt-ssl-addon
         nodeGroup: cp
