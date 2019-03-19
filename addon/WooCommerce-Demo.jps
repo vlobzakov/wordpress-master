@@ -9,9 +9,12 @@ onInstall:
   - cmd[${nodes.cp.master.id}]: |-
       cd ${SERVER_WEBROOT}
       cp ${SERVER_WEBROOT}/wp-config.php ~/
+      cp ${SERVER_WEBROOT}/wp-jelastic.php ~/
       rm -rf ${SERVER_WEBROOT}/*
       wget -qO- '${baseUrl}/data/demo.tar.gz' | tar xz -C ${SERVER_WEBROOT} &>> /var/log/run.log
       cp ~/wp-config.php ${SERVER_WEBROOT} &>> /var/log/run.log
+      cp ~/wp-jelastic.php ${SERVER_WEBROOT} &>> /var/log/run.log
+      rm -rf ${SERVER_WEBROOT}/wp-content/plugins/litespeed-cache/
       wp db export --tables=wp_users ~/wp_users.sql --path=${SERVER_WEBROOT} &>> /var/log/run.log
       wp db export --tables=wp_usermeta ~/wp_usermeta.sql --path=${SERVER_WEBROOT} &>> /var/log/run.log
       wget ${baseUrl}/data/demo.sql -O ~/demo.sql &>> /var/log/run.log
