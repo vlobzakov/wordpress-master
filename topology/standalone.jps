@@ -6,6 +6,7 @@ globals:
   CP_NODE_TYPE: ${settings.CP_NODE_TYPE}
   BL_NODE_TYPE: ${settings.BL_NODE_TYPE}
 
+skipNodeEmails: true
 nodes:
   - nodeType: ${globals.CP_NODE_TYPE}
     extip: true
