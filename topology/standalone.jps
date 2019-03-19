@@ -3,10 +3,10 @@ jpsVersion: '1.1'
 name: Wordpress Standalone
 
 globals:
-  NODE_TYPE: ${settings.NODE_TYPE}
+  NODE_TYPE: ${settings.CP_NODE_TYPE}
 
 nodes:
-  - nodeType: ${globals.NODE_TYPE}
+  - nodeType: ${globals.CP_NODE_TYPE}
     extip: true
     count: 1
     cloudlets: 16
