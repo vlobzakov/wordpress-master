@@ -1,3 +1,4 @@
+<font size="5">
 [${globals.PROTOCOL}://${settings.envName}.${globals.REGION-0}/](${globals.PROTOCOL}://${settings.envName}.${globals.REGION-0}/)
 
 Use the following credentials to access the admin panel:
@@ -20,3 +21,4 @@ The instructions below can help you with the further managing your WordPress:
 * [Monitor the statistics](http://docs.jelastic.com/view-app-statistics) & [view log files](https://docs.jelastic.com/view-log-files)
 * [Attach Public IP](https://docs.jelastic.com/public-ip)
 * [Access environment via SSH](https://docs.jelastic.com/ssh-access)
+</font>
