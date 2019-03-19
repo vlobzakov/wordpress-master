@@ -7,6 +7,7 @@ globals:
   BL_NODE_TYPE: ${settings.BL_NODE_TYPE}
   APP_CONFIGS_PATH: ${settings.APP_CONFIGS_PATH}
 
+skipNodeEmails: true
 nodes:
   - nodeType: ${globals.BL_NODE_TYPE}
     extip: true
