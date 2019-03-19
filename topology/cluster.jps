@@ -117,6 +117,3 @@ onInstall:
 
   - log: Wordpress Add-ons Installation
   - install: ${baseUrl}../scripts/addons.jps?_r=${fn.random}
-
-  - log: Auto Scaling Triggers
-  - script: "${baseUrl}../scripts/addTriggers.js"
