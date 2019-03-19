@@ -106,6 +106,11 @@ onInstall:
 
   - log: Load Balancer Setup
   - install: ${baseUrl}../scripts/setup-BL.jps?_r=${fn.random}
+  
+  - log: SSL check Setup
+  - install: ${baseUrl}../scripts/checkSSLStatus.jps?_r=${fn.random}
+    settings:
+      TARGET_NODES: bl
 
   - log: App Servers Setup
   - install: ${baseUrl}../scripts/setup-CP.jps?_r=${fn.random}
@@ -114,6 +119,3 @@ onInstall:
       
   - log: Wordpress Sites Configuration Setup
   - install: ${baseUrl}../scripts/setup-SITES.jps?_r=${fn.random}
-
-  - log: Wordpress Add-ons Installation
-  - install: ${baseUrl}../scripts/addons.jps?_r=${fn.random}
