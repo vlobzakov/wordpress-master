@@ -3,7 +3,8 @@ jpsVersion: '1.1'
 name: Wordpress Standalone
 
 globals:
-  NODE_TYPE: ${settings.CP_NODE_TYPE}
+  CP_NODE_TYPE: ${settings.CP_NODE_TYPE}
+  BL_NODE_TYPE: ${settings.BL_NODE_TYPE}
 
 nodes:
   - nodeType: ${globals.CP_NODE_TYPE}
