@@ -159,6 +159,6 @@ actions:
     - cache
 
   letsencrypt-ssl:
-    - install: https://github.com/jelastic-jps/lets-encrypt/blob/master/manifest.jps?_r=${fn.random}
+    - install: https://github.com/sych74/lets-encrypt/blob/master/manifest.jps?_r=${fn.random}
       settings:
         customDomains: ${settings.customDomains}
