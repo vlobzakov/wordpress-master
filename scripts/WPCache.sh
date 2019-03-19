@@ -99,7 +99,7 @@ cd ${SERVER_WEBROOT};
 
 if [[ ${COMPUTE_TYPE} == *"llsmp"* || ${COMPUTE_TYPE} == *"litespeed"* ]] ; then
 	${WP} plugin install litespeed-cache --activate --path=${SERVER_WEBROOT}
-	CACHE_FLUSH="${WP} lscache-purge all"
+	CACHE_FLUSH="${WP} lscache-purge all; rm -rf /tmp/lscache/vhosts/Jelastic/*"
         WPCACHE='lscwp';
 elif [[ ${COMPUTE_TYPE} == *"lemp"* || ${COMPUTE_TYPE} == *"nginx"* ]] ; then
 	${WP} plugin install w3-total-cache --activate --path=${SERVER_WEBROOT}
