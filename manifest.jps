@@ -17,10 +17,10 @@ settings:
       values:
         - value: standalone
           caption: Standalone
-          tooltip: <h3>1 CP + 1 DB</h3>Standalone solution for WordPress. <img width='314' height='280' src='https://github.com/sych74/wordpress-cluster/raw/master/images/standalone.svg?sanitize=true'>
+          tooltip: <h3>1 App Server </h3>Standalone solution for WordPress. <img width='300' height='200' src='https://raw.githubusercontent.com/sych74/wordpress-master/master/images/standalone.svg?sanitize=true'>
         - value: cluster
           caption: HA Cluster
-          tooltip: <h3>1 LB + 2 CP + 3 DB Galera + 1 ST</h3>Highly available and scalable clustered solution for WordPress. <img width='314' height='280' src='https://github.com/sych74/wordpress-cluster/raw/master/images/cluster.svg?sanitize=true'>
+          tooltip: <h3>1 LB + 2 CP + 3 DB Galera + 1 ST</h3>Highly available and scalable clustered solution for WordPress. <img width='270' height='360' src='https://raw.githubusercontent.com/sych74/wordpress-master/master/images/cluster.svg?sanitize=true'>
       tipParams:
         dismissDelay: 600000
         anchor: l
