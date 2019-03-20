@@ -138,7 +138,7 @@ actions:
   createEnvs:
     - script: |
         return {
-          result:0, 
+          result:0,
           regions:'${settings.regions}'.split(','),
           envGroups:eval('(' + MANIFEST + ')').envGroups
         };
@@ -159,6 +159,7 @@ actions:
         install:
           - jps: /topology/${settings.topology}.jps?_r=${fn.random}
             envName: ${globals.envName1}
+            loggerName: ${globals.envName1}
             envGroups: ${response.envGroups}
             region: ${globals.region1}
             settings:
@@ -170,6 +171,7 @@ actions:
 
           - jps: /topology/${settings.topology}.jps?_r=${fn.random}
             envName: ${globals.envName2}
+            loggerName: ${globals.envName1}
             envGroups: ${response.envGroups}
             region: ${globals.region2}
             settings:
@@ -190,9 +192,9 @@ actions:
           APP_CONFIGS_PATH: ${globals.APP_CONFIGS_PATH}
           db_user: ${globals.DB_USER}
           db_pass: ${globals.DB_PASS}
-          
+
     - script: |
-        return { result : 0, regions: '${settings.regions}'.split(',') };        
+        return { result : 0, regions: '${settings.regions}'.split(',') };
 
   run:
     - script: |
