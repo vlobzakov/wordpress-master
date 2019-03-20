@@ -171,7 +171,7 @@ actions:
 
           - jps: /topology/${settings.topology}.jps?_r=${fn.random}
             envName: ${globals.envName2}
-            loggerName: ${globals.envName1}
+            loggerName: ${globals.envName2}
             envGroups: ${response.envGroups}
             region: ${globals.region2}
             settings:
