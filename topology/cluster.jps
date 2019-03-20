@@ -65,7 +65,7 @@ onAfterScaleOut[nodeGroup:cp]:
   forEach(event.response.nodes):
     - setNodeDisplayName [${@i.id}]: AppServer
     - log: App Servers Setup
-    - install: https://raw.githubusercontent.com/sych74/wordpress-master/master/scripts/setup-CP.jps?_r=${fn.random}
+    - install: https://raw.githubusercontent.com/sych74/wordpress-master/master/scripts/WP-CLI.jps?_r=${fn.random}
       settings:
         TARGET_NODES: ${@i.id}
 
@@ -104,7 +104,7 @@ onInstall:
     nodeGroup: sqldb
 
   - log: App Servers Setup
-  - install: ${baseUrl}../scripts/install-WP_CLI.jps?_r=${fn.random}
+  - install: ${baseUrl}../scripts/WP-CLI.jps?_r=${fn.random}
     settings:
       TARGET_NODES: cp
 
