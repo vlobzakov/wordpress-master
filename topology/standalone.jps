@@ -28,7 +28,6 @@ onInstall:
   - cmd[cp]: rm -rf ${SERVER_WEBROOT}/*
   
   - log: DB Setup
-  - cmd[cp]: wget ${baseUrl}../configs/sqldb/wordpress.cnf -O /etc/mysql/conf.d/wordpress.cnf
   - cmd[cp]: |-
       sed -i "s/server-id.*/server-id = ${nodes.cp.master.id}/" /etc/my.cnf
       wget https://raw.githubusercontent.com/jelastic-jps/mysql-cluster/master/scripts/setupUser.sh -O ~/setupUser.sh &>> /var/log/run.log
