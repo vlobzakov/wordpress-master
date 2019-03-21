@@ -30,7 +30,6 @@ settings:
     - caption: Regions
       type: regionlist
       name: regions
-      showFullDomain: false
       disableInactive: true
       selectFirstAvailable: true
       multiSelect: true
@@ -45,7 +44,7 @@ settings:
       name: envName
       dependsOn: region
       randomName: true
-      showFullDomain: true
+      showFullDomain: false
       required: true
 
     - name: wp_title
