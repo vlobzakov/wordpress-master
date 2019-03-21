@@ -8,7 +8,7 @@ Use the following credentials to access the admin panel:
 
 Manage the database nodes using the next credentials:
 
-**PhpMyAdmin Panel**: [http://node${globals.masterDB-ID0}-${settings.envName}.${globals.REGION-0}/phpMyAdmin/](http://node${globals.masterDB-ID0}-${settings.envName}.${globals.REGION-0}/phpMyAdmin/)
+**phpMyAdmin Panel**: [https://node${globals.masterDB-ID0}-${settings.envName}.${globals.REGION-0}/](https://node${globals.masterDB-ID0}-${settings.envName}.${globals.REGION-0}/)
 **Username**: ${globals.DB_USER}    
 **Password**: ${globals.DB_PASS}  
 
