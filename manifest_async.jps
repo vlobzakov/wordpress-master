@@ -44,7 +44,7 @@ settings:
       name: envName
       dependsOn: region
       randomName: true
-      showFullDomain: true
+      showFullDomain: false
       required: true
 
     - name: wp_title
@@ -346,7 +346,7 @@ actions:
       commandList:
         - command: |-
             wget ${baseUrl}/scripts/WPCache.sh?_r=${fn.random} -O ~/WPCache.sh &>> /var/log/run.log
-            bash ~/WPCache.sh --edgeportCDN true --CDN_URL ${settings.envName}-${response.response.partnerCode}.cdn.edgeport.net
+            bash ~/WPCache.sh --edgeportCDN true --CDN_URL ${globals.PROTOCOL}://${settings.envName}-${response.response.partnerCode}.cdn.edgeport.net
 
   install-wordpress:
     - install: ${baseUrl}/scripts/install-WP.jps
