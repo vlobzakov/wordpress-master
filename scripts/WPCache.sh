@@ -180,7 +180,7 @@ if [ $edgeportCDN == 'true' ] ; then
           ;;
     lscwp)
 	  checkCdnStatus;
-	  CDN_ORI=$(~/wp option get siteurl --path=${SERVER_WEBROOT} | cut -d'/' -f3)
+	  CDN_ORI=$(${WP} option get siteurl --path=${SERVER_WEBROOT} | cut -d'/' -f3)
           $LSCWP_OPTION_SET cdn false --path=${SERVER_WEBROOT} &>> /var/log/run.log
 	  $LSCWP_OPTION_SET litespeed-cache-cdn_mapping[url][0] http://${CDN_URL}/ --path=${SERVER_WEBROOT} &>> /var/log/run.log
           $LSCWP_OPTION_SET cdn_ori "//${CDN_ORI}/" --path=${SERVER_WEBROOT} &>> /var/log/run.log
