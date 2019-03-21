@@ -346,7 +346,7 @@ actions:
       commandList:
         - command: |-
             wget ${baseUrl}/scripts/WPCache.sh?_r=${fn.random} -O ~/bin/WPCache.sh &>> /var/log/run.log
-            bash ~/bin/WPCache.sh --edgeportCDN true --CDN_URL ${globals.PROTOCOL}://${settings.envName}-${response.response.partnerCode}.cdn.edgeport.net
+            bash ~/bin/WPCache.sh --edgeportCDN true --CDN_URL ${globals.PROTOCOL}://${settings.envName}-${response.response.partnerCode}.cdn.edgeport.net/
 
   install-wordpress:
     - install: ${baseUrl}/scripts/install-WP.jps
