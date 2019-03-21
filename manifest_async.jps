@@ -345,8 +345,8 @@ actions:
       nodeId: ${globals.masterCP-ID0}
       commandList:
         - command: |-
-            wget ${baseUrl}/scripts/WPCache.sh?_r=${fn.random} -O ~/WPCache.sh &>> /var/log/run.log
-            bash ~/WPCache.sh --edgeportCDN true --CDN_URL ${globals.PROTOCOL}://${settings.envName}-${response.response.partnerCode}.cdn.edgeport.net
+            wget ${baseUrl}/scripts/WPCache.sh?_r=${fn.random} -O ~/bin/WPCache.sh &>> /var/log/run.log
+            bash ~/bin/WPCache.sh --edgeportCDN true --CDN_URL ${globals.PROTOCOL}://${settings.envName}-${response.response.partnerCode}.cdn.edgeport.net
 
   install-wordpress:
     - install: ${baseUrl}/scripts/install-WP.jps
