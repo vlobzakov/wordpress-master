@@ -30,6 +30,7 @@ settings:
     - caption: Regions
       type: regionlist
       name: regions
+      showFullDomain: false
       disableInactive: true
       selectFirstAvailable: true
       multiSelect: true
