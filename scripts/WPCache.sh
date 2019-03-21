@@ -99,11 +99,11 @@ cd ${SERVER_WEBROOT};
 
 if [[ ${COMPUTE_TYPE} == *"llsmp"* || ${COMPUTE_TYPE} == *"litespeed"* ]] ; then
 	${WP} plugin install litespeed-cache --activate --path=${SERVER_WEBROOT}
-	CACHE_FLUSH="${WP} lscache-purge all; rm -rf /tmp/lscache/vhosts/Jelastic/*"
+	CACHE_FLUSH="${WP} lscache-purge all --path=${SERVER_WEBROOT}; rm -rf /tmp/lscache/vhosts/Jelastic/*"
         WPCACHE='lscwp';
 elif [[ ${COMPUTE_TYPE} == *"lemp"* || ${COMPUTE_TYPE} == *"nginx"* ]] ; then
 	${WP} plugin install w3-total-cache --activate --path=${SERVER_WEBROOT}
-	CACHE_FLUSH="${WP} w3-total-cache flush all"
+	CACHE_FLUSH="${WP} w3-total-cache flush all --path=${SERVER_WEBROOT}"
         WPCACHE="w3tc";
 else
         echo 'Compute type is not defined';
@@ -122,7 +122,7 @@ cat > ~/bin/checkCdnStatus.sh <<EOF
     if [ \$status = "SUCCESS" ]
     then
       ${CDN_ENABLE_CMD} --path=${SERVER_WEBROOT} &>> /var/log/run.log
-      ${CACHE_FLUSH} --path=${SERVER_WEBROOT} &>> /var/log/run.log
+      ${CACHE_FLUSH}  &>> /var/log/run.log
       ${WP} cache flush --path=${SERVER_WEBROOT} &>> /var/log/run.log
       crontab -l | sed "/checkCdnStatus/d" | crontab -
     fi
@@ -174,15 +174,16 @@ if [ $edgeportCDN == 'true' ] ; then
   case $WPCACHE in
     w3tc)
 	  checkCdnStatus;
+	  CDN_DOMAIN=$(echo ${CDN_URL} | cut -d'/' -f3)
 	  $W3TC_OPTION_SET cdn.enabled false --type=boolean --path=${SERVER_WEBROOT} &>> /var/log/run.log
           $W3TC_OPTION_SET cdn.engine mirror --path=${SERVER_WEBROOT} &>> /var/log/run.log
-          $W3TC_OPTION_SET cdn.mirror.domain ${CDN_URL} --path=${SERVER_WEBROOT} &>> /var/log/run.log
+          $W3TC_OPTION_SET cdn.mirror.domain ${CDN_DOMAIN} --path=${SERVER_WEBROOT} &>> /var/log/run.log
           ;;
     lscwp)
 	  checkCdnStatus;
 	  CDN_ORI=$(${WP} option get siteurl --path=${SERVER_WEBROOT} | cut -d'/' -f3)
           $LSCWP_OPTION_SET cdn false --path=${SERVER_WEBROOT} &>> /var/log/run.log
-	  $LSCWP_OPTION_SET litespeed-cache-cdn_mapping[url][0] http://${CDN_URL}/ --path=${SERVER_WEBROOT} &>> /var/log/run.log
+	  $LSCWP_OPTION_SET litespeed-cache-cdn_mapping[url][0] ${CDN_URL} --path=${SERVER_WEBROOT} &>> /var/log/run.log
           $LSCWP_OPTION_SET cdn_ori "//${CDN_ORI}/" --path=${SERVER_WEBROOT} &>> /var/log/run.log
           ;;
   esac
