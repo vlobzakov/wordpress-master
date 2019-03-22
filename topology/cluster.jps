@@ -102,6 +102,9 @@ onInstall:
       db_pass: "${globals.DB_PASS}"
       custom_conf: "${baseUrl}../configs/sqldb/wordpress.cnf"
     nodeGroup: sqldb
+    
+  - log: App Servers Setup
+  - install: ${baseUrl}../scripts/setup-SITES.jps?_r=${fn.random}
 
   - log: App Servers Setup
   - install: ${baseUrl}../scripts/WP-CLI.jps?_r=${fn.random}
