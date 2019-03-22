@@ -84,6 +84,7 @@ globals:
   WP_ADMIN_PASS: "${fn.password(10)}"
   MU_REGIONS: false
   CLUSTER_TYPE: region
+  SUCCESS: success
 
 onInstall:
   - if (!${settings.ls-addon}):
@@ -107,7 +108,7 @@ onInstall:
       - if ('${settings.topology}' == 'cluster'):
           setGlobals:
             CP_NODE_TYPE: litespeedphp-redis
-            BL_NODE_TYPE: litespeedadc
+            BL_NODE_TYPE: litespeedadc-dockerized
             APP_CONFIGS_PATH: /var/www/webroot/TMP
 
   - createEnvs: ${settings.envName}
@@ -340,13 +341,16 @@ actions:
 
   configure-edgeport-CDN:
     - script: return jelastic.dev.scripting.Eval("c05ffa5b45628a2a0c95467ebca8a0b4", session, "cdn.info", {partnerCode:1})
+    - setGlobals:
+        CDN_URL: ${globals.PROTOCOL}://${settings.envName}-${response.response.partnerCode}.cdn.edgeport.net/
+        SUCCESS: success-cdn
     - api: env.control.ExecCmdById
       envName: ${settings.envName}
       nodeId: ${globals.masterCP-ID0}
       commandList:
         - command: |-
             wget ${baseUrl}/scripts/WPCache.sh?_r=${fn.random} -O ~/bin/WPCache.sh &>> /var/log/run.log
-            bash ~/bin/WPCache.sh --edgeportCDN true --CDN_URL ${globals.PROTOCOL}://${settings.envName}-${response.response.partnerCode}.cdn.edgeport.net/
+            bash ~/bin/WPCache.sh --edgeportCDN true --CDN_URL ${globals.CDN_URL}
 
   install-wordpress:
     - install: ${baseUrl}/scripts/install-WP.jps
@@ -368,4 +372,7 @@ actions:
             wget ${baseUrl}/scripts/WPCache.sh?_r=${fn.random} -O ~/bin/WPCache.sh &>> /var/log/run.log
             bash ~/bin/WPCache.sh --pgcache true --objectcache true --REDIS_HOST 127.0.0.1
 
-success: /text/${settings.topology}/${globals.CLUSTER_TYPE}.md?_r=${fn.random}
+success:
+  email: text/${settings.topology}/${globals.CLUSTER_TYPE}.md?_r=${fn.random}
+  text: text/${globals.SUCCESS}.md?_r=${fn.random}
+  
