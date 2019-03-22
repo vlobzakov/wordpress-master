@@ -134,6 +134,9 @@ onInstall:
       protocol: ${globals.PROTOCOL}
 
   - if (${settings.cdn-addon:false}): configure-edgeport-CDN
+  
+  - setGlobals:
+      startPage: ${globals.PROTOCOL}://${settings.envName}.${globals.REGION-0}/
 
 actions:
   createEnvs:
@@ -375,4 +378,5 @@ actions:
 success:
   email: text/${settings.topology}/${globals.CLUSTER_TYPE}.md?_r=${fn.random}
   text: text/${globals.SUCCESS}.md?_r=${fn.random}
+startPage: ${globals.startPage}
   
