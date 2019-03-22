@@ -6,7 +6,7 @@ Use the following credentials to access the admin panel:
 **Login**: admin  
 **Password**: ${globals.WP_ADMIN_PASS}  
 
-Check whether application traffic is served through CDN by https://wordpress.cdn.edgeport.net, it may take up to 1 hour to propagate static assets across PoPs, so be patient.
+Check whether application traffic is served through CDN by [${globals.CDN_URL}](${globals.CDN_URL}), it may take up to 1 hour to propagate static assets across PoPs, so be patient.
 
 A bunch of emails with credentials and relevant links was sent to your mailbox.
 
