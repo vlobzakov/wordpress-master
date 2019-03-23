@@ -1,4 +1,4 @@
-[Bind custom domain](https://docs.jelastic.com/ssh-access) and issue valid [SSL](https://docs.jelastic.com/jelastic-ssl) certificate or get platform’s SSL for your environment.
+[Bind custom domain](https://docs.jelastic.com/ssh-access) and issue valid SSL certificate for it or turn platform’s [SSL](https://docs.jelastic.com/jelastic-ssl) on for your environment.
 
 Use the following credentials to access the admin panel:
 
