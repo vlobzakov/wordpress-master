@@ -15,13 +15,6 @@ nodes:
     cloudlets: 8
     nodeGroup: bl
     scalingMode: STATEFUL
-    volumes:
-      - "/var/lib/jelastic/SSL"
-    volumeMounts:
-      "/var/lib/jelastic/SSL":
-        readOnly: false
-        sourcePath: "/data/SSL"
-        sourceNodeGroup: storage
     displayName: Load balancer
 
   - nodeType: ${globals.CP_NODE_TYPE}
