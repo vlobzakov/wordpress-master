@@ -99,7 +99,7 @@ cd ${SERVER_WEBROOT};
 
 if [[ ${COMPUTE_TYPE} == *"llsmp"* || ${COMPUTE_TYPE} == *"litespeed"* ]] ; then
 	${WP} plugin install litespeed-cache --activate --path=${SERVER_WEBROOT}
-	CACHE_FLUSH="${WP} lscache-purge all --path=${SERVER_WEBROOT}; rm -rf /tmp/lscache/vhosts/Jelastic/*"
+	CACHE_FLUSH="${WP} lscache-purge all --path=${SERVER_WEBROOT}; rm -rf /tmp/lscache/vhosts/Jelastic/* "
         WPCACHE='lscwp';
 elif [[ ${COMPUTE_TYPE} == *"lemp"* || ${COMPUTE_TYPE} == *"nginx"* ]] ; then
 	${WP} plugin install w3-total-cache --activate --path=${SERVER_WEBROOT}
@@ -132,7 +132,7 @@ crontab -l | { cat; echo "* * * * * /bin/bash ~/bin/checkCdnStatus.sh ${CDN_URL}
 }
 
 if [ $purge == 'true' ] ; then
-	${CACHE_FLUSH} --path=${SERVER_WEBROOT} &>> /var/log/run.log
+	${CACHE_FLUSH} &>> /var/log/run.log
 	${WP} cache flush --path=${SERVER_WEBROOT} &>> /var/log/run.log
 fi
 
