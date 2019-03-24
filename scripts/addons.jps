@@ -2,31 +2,6 @@ jpsType: update
 logo: https://download.jelastic.com/public.php?service=files&t=3da2215839f82aa50d3d961271cd1cb9&download
 name: Jelastic Add-ons for Wordpress
 description: Jelastic Add-ons for Wordpress
-settings:
-  domain:
-      fields:
-        - name: new_domain
-          caption: New Domain
-          type: string
-          default: ""
-          required: true
-  wpmu:
-    fields:
-    - name: mode
-      caption: Multisites mode
-      type: radio-fieldset
-      values:
-        subdir: SubDirectories
-        subdom: SubDomain
-      default: subdir
-      
-  letsencrypt:
-    fields:
-    - type: string
-      name: customDomains
-      regex: "^([a-zA-Z0-9][a-zA-Z0-9-]{0,61}[a-zA-Z0-9]?(\\.[a-zA-Z0-9-]{1,}){1,6}[,|;]?){1,100}$"
-      caption: External Domain(s)
-      required: false
       
 onInstall:
   - setGlobals:
@@ -37,26 +12,6 @@ onInstall:
       nodeGroup: cp
       
 addons:
-  - id: domain-addon
-    name: Domain replace for WordPress
-    description: Domain replace for WordPress
-    buttons:
-      settings: domain
-      procedure: domain
-      caption: Domain replace
-      logsPath: "/var/log/run.log"
-      successText: Domain successfully replaced.
-
-  - id: wpmu-addon
-    name: Convert WordPress to Multisite Network
-    description: Convert WordPress to Multisite Network
-    logo: 4{baseUrl}/images/wordpress-multisite.png
-    buttons:
-      settings: wpmu
-      procedure: wpmu
-      caption: Convert to multisite
-      logsPath: "/var/log/run.log"
-      successText: Multisite network successfully install.
 
   - id: purge-cache-addon
     name: Purge all caches on all web servers of all regions
@@ -67,71 +22,7 @@ addons:
       logsPath: "/var/log/run.log"
       successText: All caches are successfully purged.
 
-  - id: cdn
-    name: Edgeport - Premium CDN for WordPress
-    homepage: https://edgeport.net
-    description:
-      short: Edgeport - Premium CDN
-    logo: https://github.com/edgeport/cdn/blob/master/images/edgeport-white-logo-70x70-2.png
-    buttons:
-      procedure: cdn
-      caption: Install Edgeport - Premium CDN
-      logsPath: "/var/log/run.log"
-      successText: Cdn successfully installed.
-
-  - id: woocommerce
-    name: WooCommerce demo data for WordPress
-    homepage: https://woocommerce.com/
-    description:
-      short: WooCommerce demo data for WordPress
-    logo: https://github.com/edgeport/cdn/blob/master/images/woo_logo.png.png
-    buttons:
-      procedure: woocommerce
-      caption: Install
-      loadingText: Installing...
-      logsPath: "/var/log/run.log"
-      confirmText: Do you want to install WooCommerce demo data?
-      successText: WooCommerce demo data successfully deployed.
-
-  - id: letsencrypt-ssl-addon
-    description:
-      text: https://raw.githubusercontent.com/jelastic-jps/lets-encrypt/master/text/description.md
-      short: Free tool to configure support of secured SSL connection for an environment,
-              by either internal or custom domain name.
-    name: Let's Encrypt Free SSL
-    homepage: https://github.com/jelastic-jps/lets-encrypt
-    logo: https://raw.githubusercontent.com/jelastic-jps/lets-encrypt/master/images/lets-encrypt.png
-    buttons:
-      settings: letsencrypt
-      procedure: letsencrypt-ssl
-      loadingText: Installing...
-      caption: Install
-      logsPath: "/var/log/run.log"
-      confirmText: Do you want to install Let's Encrypt addon?
-      successText: Let's Encrypt addon successfully deployed.
-
-actions:
-  cdn:
-    - install: ${globals.ADDONS_BASE_URL}/edgeportCDN.jps?_r=${fn.random}
-    
-  wpmu:
-    - install: ${globals.ADDONS_BASE_URL}/WPMU.jps?_r=${fn.random}
-      settings:
-        mode: ${settings.mode}  
-
-  domain:
-    - install: ${globals.ADDONS_BASE_URL}/Domain.jps?_r=${fn.random}
-      settings:
-        new_domain: ${settings.new_domain}
-   
+actions:   
   cache:
     - install: ${globals.ADDONS_BASE_URL}/purgeCache.jps?_r=${fn.random}
-    
-  woocommerce:
-    - install: ${globals.ADDONS_BASE_URL}/WooCommerce-Demo.jps?_r=${fn.random}
-    - cache
-
-  letsencrypt-ssl:
-    - install: https://github.com/sych74/lets-encrypt/blob/master/manifest.jps?_r=${fn.random}
-      settings:
-        customDomains: ${settings.customDomains}
+ 
