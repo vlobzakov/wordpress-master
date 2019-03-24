@@ -134,6 +134,7 @@ crontab -l | { cat; echo "* * * * * /bin/bash ~/bin/checkCdnStatus.sh ${CDN_URL}
 if [ $purge == 'true' ] ; then
 	${CACHE_FLUSH} &>> /var/log/run.log
 	${WP} cache flush --path=${SERVER_WEBROOT} &>> /var/log/run.log
+	[ -d /tmp/lscache/vhosts/ ] && /usr/bin/rm -rf /tmp/lscache/vhosts/Jelastic/* &>> /var/log/run.log
 fi
 
 if [ $pgcache == 'true' ] ; then
