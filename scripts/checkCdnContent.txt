@@ -1,3 +1,4 @@
+/
 wp-content/themes/twentynineteen/style.css
 wp-includes/css/dist/block-library/style.min.css
 wp-includes/css/dist/block-library/theme.min.css
