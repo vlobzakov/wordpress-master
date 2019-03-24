@@ -33,35 +33,9 @@ onInstall:
       ADDONS_BASE_URL: https://raw.githubusercontent.com/sych74/wordpress-master/master/addon
       
   - installAddon:
-      id: domain-addon
-      nodeGroup: cp
-
-  - installAddon:
-      id: wpmu-addon
-      nodeGroup: cp
-
-  - installAddon:
       id: purge-cache-addon
       nodeGroup: cp
       
-  - installAddon:
-      id: cdn
-      nodeGroup: cp
-      
-  - installAddon:
-      id: woocommerce
-      nodeGroup: cp
-
-  - if (nodes.bl):
-    - installAddon:
-        id: letsencrypt-ssl-addon
-        nodeGroup: bl
-
-  - if (!nodes.bl):
-    - installAddon:
-        id: letsencrypt-ssl-addon
-        nodeGroup: cp
-
 addons:
   - id: domain-addon
     name: Domain replace for WordPress
@@ -85,13 +59,13 @@ addons:
       successText: Multisite network successfully install.
 
   - id: purge-cache-addon
-    name: Purge all cache
-    description: Purge all cache
+    name: Purge all caches on all web servers of all regions
+    description: Purge all caches on all web servers of all regions
     buttons:
       procedure: cache
-      caption: Purge all cache
+      caption: Purge all caches
       logsPath: "/var/log/run.log"
-      successText: All cache successfully purged.
+      successText: All caches are successfully purged.
 
   - id: cdn
     name: Edgeport - Premium CDN for WordPress
