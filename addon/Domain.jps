@@ -9,8 +9,12 @@ settings:
       type: string
       default: ""
       required: true
+      
+globals:
+  NEW_DOMAIN: ${settings.new_domain}
+      
 onInstall:
     - cmd[${nodes.cp.master.id}]:
         wp option get siteurl --path=/var/www/webroot/ROOT
     - cmd[${nodes.cp.master.id}]:
-        wp search-replace '${response.responses.out}' '${settings.new_domain}' --skip-columns=guid --all-tables --path=/var/www/webroot/ROOT
+        wp search-replace '${response.responses.out}' '${globals.NEW_DOMAIN}' --skip-columns=guid --all-tables --path=/var/www/webroot/ROOT

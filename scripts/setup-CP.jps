@@ -3,30 +3,49 @@ name: CP setup script
 description: This script for AppServer configurations
 
 globals:
-  REDIS_PASS: ${settings.redis_pass}
+  TARGET_NODES: ${settings.TARGET_NODES}
 
 onInstall:
   - if (/lemp/.test("${nodes.cp.nodeType}") || /nginxphp/.test("${nodes.cp.nodeType}")):
       - nginx
       - redis: 
-         PHP_CONFIG_PATH: /etc/php.d
+          PHP_CONFIG_PATH: /etc/php.d
 
   - if (/llsmp/.test("${nodes.cp.nodeType}") || /litespeed/.test("${nodes.cp.nodeType}")):
       - redis: 
          PHP_CONFIG_PATH: /usr/local/lsws/lsphp73/etc/php.d
 
+  - wp-cli
+
 actions:
   redis:
-    - cmd[cp]: |-
+    - cmd[${globals.TARGET_NODES}]: |-
         wget ${baseUrl}../configs/cp/php/wp-upload.ini -O ${this.PHP_CONFIG_PATH}/wp-upload.ini
         wget ${baseUrl}../configs/cp/php/opcache.ini -O ${this.PHP_CONFIG_PATH}/opcache.ini
         wget ${baseUrl}../configs/cp/php/extensions.ini -O ${this.PHP_CONFIG_PATH}/extensions.ini
         wget ${baseUrl}../configs/cp/php/redis.ini -O ${this.PHP_CONFIG_PATH}/redis.ini
-        sed -i "s/_REDIS_PASSWD_/${globals.REDIS_PASS}/" ${this.PHP_CONFIG_PATH}/redis.ini
         jem service restart
 
   nginx:
-    - cmd[cp]: |-
+    - if (/lemp/.test("${nodes.cp.nodeType}")):
+        - cmd[${globals.TARGET_NODES}]: |-
+            mkdir -p /var/www/webroot/SITES_ENABLED;
+            ln -s /var/www/webroot/SITES_ENABLED /etc/nginx/conf.d/SITES_ENABLED;
+        - cmd[${globals.TARGET_NODES}]: |-
+            mkdir -p /var/www/webroot/SSL;
+            ln -s /var/www/webroot/SSL /var/lib/jelastic/SSL;
+          user: root
+    - cmd[${globals.TARGET_NODES}]: |-
         wget ${baseUrl}../configs/cp/nginx/nginx.conf -O /etc/nginx/nginx.conf
-        wget ${baseUrl}../configs/cp/nginx/default.conf -O /etc/nginx/conf.d/default.conf
+        wget ${baseUrl}../configs/cp/nginx/nossl.conf -O /etc/nginx/conf.d/nossl.conf
+        wget ${baseUrl}../configs/cp/nginx/ssl.conf.disabled -O /etc/nginx/conf.d/ssl.conf.disabled
         wget ${baseUrl}../configs/cp/nginx/fastcgi_cache.conf -O /etc/nginx/conf.d/fastcgi_cache.conf
+        wget ${baseUrl}../scripts/checkNginxStatus.sh -O ~/bin/checkNginxStatus.sh
+        chmod +x ~/bin/checkNginxStatus.sh
+        crontab -l | { cat; echo "* * * * * /bin/bash ~/bin/checkNginxStatus.sh"; } | crontab
+        
+  wp-cli:
+    - cmd[${globals.TARGET_NODES}]: |- 
+        [ ! -d $HOME/bin ] && mkdir $HOME/bin
+        curl -o $HOME/bin/wp https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar && chmod +x $HOME/bin/wp
+        echo "export PATH=$PATH:$HOME/bin/" >> $HOME/.bash_profile
