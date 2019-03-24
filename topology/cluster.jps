@@ -111,3 +111,5 @@ onInstall:
     settings:
       TARGET_NODES: cp
 
+  - log: Addon for caches purged
+  - install: ${baseUrl}../scripts/addons.jps.jps?_r=${fn.random}
