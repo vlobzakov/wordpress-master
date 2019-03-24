@@ -126,7 +126,7 @@ while read -ru 4 CONTENT; do
     else
       exit
     fi
-done 4< checkCdnContent.txt
+done 4< ~/bin/checkCdnContent.txt
 ${CDN_ENABLE_CMD} --path=${SERVER_WEBROOT} &>> /var/log/run.log
 ${CACHE_FLUSH}  &>> /var/log/run.log
 ${WP} cache flush --path=${SERVER_WEBROOT} &>> /var/log/run.log
