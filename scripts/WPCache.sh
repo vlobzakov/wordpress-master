@@ -118,14 +118,19 @@ elif [ $WPCACHE == 'lscwp' ] ; then
 fi
 cat > ~/bin/checkCdnStatus.sh <<EOF
 #!/bin/bash
-  status=\$(curl \$1 -k -s -f -o /dev/null && echo "SUCCESS" || echo "ERROR")
+while read -ru 4 CONTENT; do
+  status=\$(curl \$1\$CONTENT -k -s -f -o /dev/null && echo "SUCCESS" || echo "ERROR")
     if [ \$status = "SUCCESS" ]
     then
-      ${CDN_ENABLE_CMD} --path=${SERVER_WEBROOT} &>> /var/log/run.log
-      ${CACHE_FLUSH}  &>> /var/log/run.log
-      ${WP} cache flush --path=${SERVER_WEBROOT} &>> /var/log/run.log
-      crontab -l | sed "/checkCdnStatus/d" | crontab -
+      continue
+    else
+      exit
     fi
+done 4< checkCdnContent.txt
+${CDN_ENABLE_CMD} --path=${SERVER_WEBROOT} &>> /var/log/run.log
+${CACHE_FLUSH}  &>> /var/log/run.log
+${WP} cache flush --path=${SERVER_WEBROOT} &>> /var/log/run.log
+crontab -l | sed "/checkCdnStatus/d" | crontab -
 EOF
 chmod +x ~/bin/checkCdnStatus.sh
 crontab -l | { cat; echo "* * * * * /bin/bash ~/bin/checkCdnStatus.sh ${CDN_URL}"; } | crontab
