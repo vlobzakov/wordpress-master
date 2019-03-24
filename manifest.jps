@@ -309,36 +309,38 @@ actions:
         local_db_pass: ${globals.DB_PASS}
 
   setup-synchronization:
-    - install: https://raw.githubusercontent.com/dzotic9/file-sync/master/manifest.jps?_r=${fn.random}
-      envName: ${settings.envName}
-      nodeGroup: ${globals.lsync-nodeGroup}
-      settings:
-        optional: two_envs
-        address: ${globals.storage-IP1}
-        password: ${globals.SYNC_PASS}
-        delay: 10
+    install:
+      - jps: https://raw.githubusercontent.com/dzotic9/file-sync/master/manifest.jps?_r=${fn.random}
+        envName: ${settings.envName}
+        nodeGroup: ${globals.lsync-nodeGroup}
+        settings:
+          optional: two_envs
+          address: ${globals.storage-IP1}
+          password: ${globals.SYNC_PASS}
+          delay: 10
 
-    - install: https://raw.githubusercontent.com/dzotic9/file-sync/master/manifest.jps?_r=${fn.random}
-      envName: ${settings.envName}-1
-      nodeGroup: ${globals.lsync-nodeGroup}
-      settings:
-        optional: two_envs
-        address:  ${globals.storage-IP0}
-        password: ${globals.SYNC_PASS}
-        delay: 10
+      - jps: https://raw.githubusercontent.com/dzotic9/file-sync/master/manifest.jps?_r=${fn.random}
+        envName: ${settings.envName}-1
+        nodeGroup: ${globals.lsync-nodeGroup}
+        settings:
+          optional: two_envs
+          address:  ${globals.storage-IP0}
+          password: ${globals.SYNC_PASS}
+          delay: 10
 
   install-LE-addon:
-    - install: https://github.com/jelastic-jps/lets-encrypt/blob/master/manifest.jps?_r=${fn.random}
-      envName: ${settings.envName}
-      nodeGroup: ${globals.le-nodeGroup}
-      settings:
-        customDomains: ${settings.envName}.${globals.REGION-0},${settings.envName}-1.${globals.REGION-1}
+    install:
+      - jps: https://github.com/jelastic-jps/lets-encrypt/blob/master/manifest.jps?_r=${fn.random}
+        envName: ${settings.envName}
+        nodeGroup: ${globals.le-nodeGroup}
+        settings:
+          customDomains: ${settings.envName}.${globals.REGION-0}
 
-    - install: https://github.com/jelastic-jps/lets-encrypt/blob/master/manifest.jps?_r=${fn.random}
-      envName: ${settings.envName}-1
-      nodeGroup: ${globals.le-nodeGroup}
-      settings:
-        customDomains: ${settings.envName}.${globals.REGION-0},${settings.envName}-1.${globals.REGION-1}
+      - jps: https://github.com/jelastic-jps/lets-encrypt/blob/master/manifest.jps?_r=${fn.random}
+        envName: ${settings.envName}-1
+        nodeGroup: ${globals.le-nodeGroup}
+        settings:
+          customDomains: ${settings.envName}-1.${globals.REGION-1}
 
   install-edgeport-CDN:
     - install: https://raw.githubusercontent.com/edgeport/cdn/master/manifest.yml?_r=${fn.random}
