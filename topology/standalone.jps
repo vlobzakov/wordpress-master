@@ -38,4 +38,7 @@ onInstall:
   - install: ${baseUrl}../scripts/WP-CLI.jps?_r=${fn.random}
     settings:
       TARGET_NODES: cp
-      
+   
+  - log: Addon for caches purged
+  - install: ${baseUrl}../scripts/addons.jps.jps?_r=${fn.random}
+
