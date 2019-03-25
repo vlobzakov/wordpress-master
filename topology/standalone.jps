@@ -26,12 +26,7 @@ onInstall:
 
   - log: Clean Webroot Directory
   - cmd[cp]: rm -rf ${SERVER_WEBROOT}/*
-  
-  - log: check SSL status
-  - install: ${baseUrl}../scripts/checkSSLStatus.jps?_r=${fn.random}
-    settings:
-      TARGET_NODES: cp
-  
+    
   - log: DB Setup
   - cmd[cp]: |-
       sed -i "s/server-id.*/server-id = ${nodes.cp.master.id}/" /etc/my.cnf
