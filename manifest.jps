@@ -7,7 +7,7 @@ description:
     The platform automatically deploys and configures chosen tolopology and required addons at specified regions.
   short: WordPress Cluster Pack
 logo: https://raw.githubusercontent.com/sych74/wordpress-master/master/images/wp_logo_70.png?123
-baseUrl: https://raw.githubusercontent.com/vlobzakov/wordpress-master/master
+baseUrl: https://raw.githubusercontent.com/sych74/wordpress-master/master
 settings:
   fields:
     - type: list
