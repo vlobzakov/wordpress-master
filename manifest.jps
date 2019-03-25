@@ -396,6 +396,6 @@ actions:
 
 success:
   email: text/${settings.topology}/${globals.CLUSTER_TYPE}.md?_r=${fn.random}
-  text: text/${globals.SUCCESS}.md?_r=${fn.random}
+  text: text/${globals.CLUSTER_TYPE}/${globals.SUCCESS}.md?_r=${fn.random}
 
 startPage: ${globals.PROTOCOL}://${settings.envName}.${globals.REGION-0}/

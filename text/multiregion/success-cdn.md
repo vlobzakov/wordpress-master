@@ -1,15 +1,17 @@
-[Bind custom domain](https://docs.jelastic.com/ssh-access) and issue valid SSL certificate for it or turn platform’s [SSL](https://docs.jelastic.com/jelastic-ssl) on for your environment.
+**Environment 1**: [${globals.PROTOCOL}://${settings.envName}.${globals.REGION-0}/](${globals.PROTOCOL}://${settings.envName}.${globals.REGION-0}/)   
+**Environment 2**: [${globals.PROTOCOL}://${settings.envName}-1.${globals.REGION-1}/](${globals.PROTOCOL}://${settings.envName}-1.${globals.REGION-1}/)   
 
-Use the following credentials to access the admin panel:
+**CDN Endpoint URL**:  [${globals.CDN_URL}](${globals.CDN_URL})   
+
+Use the following credentials to access the admin panel:   
 
 **Admin Panel**: [${globals.PROTOCOL}://${settings.envName}.${globals.REGION-0}/wp-admin/](${globals.PROTOCOL}://${settings.envName}.${globals.REGION-0}/wp-admin/)  
 **Login**: admin  
 **Password**: ${globals.WP_ADMIN_PASS}  
 
-A bunch of emails with credentials and relevant links was sent to your mailbox.
-
 The instructions below can help you with further managing your WordPress:
 
+* [Bind custom domain](https://docs.jelastic.com/ssh-access)
 * [Share access to the environment](http://docs.jelastic.com/share-environment)
 * [Adjust automatic vertical scaling settings](http://docs.jelastic.com/automatic-vertical-scaling)
 * [Configure automatic horizontal scaling](http://docs.jelastic.com/automatic-horizontal-scaling)
