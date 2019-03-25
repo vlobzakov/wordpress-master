@@ -331,14 +331,14 @@ actions:
   install-LE-addon:
     - if (${globals.MU_REGIONS}):
       install:
-        - jps: https://github.com/jelastic-jps/lets-encrypt/blob/master/manifest.jps?_r=${fn.random}
+        - jps: https://github.com/SlavaKatiukha/lets-encrypt/blob/master/manifest.jps?_r=${fn.random}
           envName: ${settings.envName}
           nodeGroup: ${globals.le-nodeGroup}
           settings:
             customDomains: ${settings.envName}.${globals.REGION-0}
             test: true
 
-        - jps: https://github.com/jelastic-jps/lets-encrypt/blob/master/manifest.jps?_r=${fn.random}
+        - jps: https://github.com/SlavaKatiukha/lets-encrypt/blob/master/manifest.jps?_r=${fn.random}
           envName: ${settings.envName}-1
           nodeGroup: ${globals.le-nodeGroup}
           settings:
