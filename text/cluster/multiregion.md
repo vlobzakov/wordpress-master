@@ -1,5 +1,4 @@
 [${globals.PROTOCOL}://${settings.envName}.${globals.REGION-0}/](${globals.PROTOCOL}://${settings.envName}.${globals.REGION-0}/)
-
 [${globals.PROTOCOL}://${settings.envName}-1.${globals.REGION-1}/](${globals.PROTOCOL}://${settings.envName}-1.${globals.REGION-1}/)
 
 Use the following credentials to access the admin panel:
@@ -11,7 +10,6 @@ Use the following credentials to access the admin panel:
 Manage the database nodes using the next credentials:
 
 **phpMyAdmin Panel 1**: [https://node${globals.masterDB-ID0}-${settings.envName}.${globals.REGION-0}/](https://node${globals.masterDB-ID0}-${settings.envName}.${globals.REGION-0}/)
-
 **phpMyAdmin Panel 2**: [https://node${globals.masterDB-ID1}-${settings.envName}-1.${globals.REGION-1}/](https://node${globals.masterDB-ID1}-${settings.envName}-1.${globals.REGION-1}/)
 
 **Username**: ${globals.DB_USER}    
