@@ -88,7 +88,7 @@ onInstall:
   - setNodeDisplayName [cp]: AppServer
   - setNodeDisplayName [storage]: Storage
 
-  - log: App Servers Setup
+  - log: check SSL status
   - install: ${baseUrl}../scripts/checkSSLStatus.jps?_r=${fn.random}
     settings:
       TARGET_NODES: bl
