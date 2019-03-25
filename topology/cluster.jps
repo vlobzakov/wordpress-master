@@ -88,11 +88,6 @@ onInstall:
   - setNodeDisplayName [cp]: AppServer
   - setNodeDisplayName [storage]: Storage
 
-  - log: check SSL status
-  - install: ${baseUrl}../scripts/checkSSLStatus.jps?_r=${fn.random}
-    settings:
-      TARGET_NODES: bl
-
   - log: DB Galera  Setup
   - install: https://raw.githubusercontent.com/sych74/mysql-cluster/master/scripts/galera-configuration.jps
     settings:
