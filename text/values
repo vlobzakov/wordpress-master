@@ -1,0 +1,7 @@
+        - value: standalone
+          caption: Standalone
+          tooltip: <h3 style='margin:5px; text-align:center'>Optimized Elastic Container</h3><div style='text-align:center'>For dev, test and small production sites</div><img width='300' height='200' style='margin:15px 0; margin-left:-10px' src='https://raw.githubusercontent.com/sych74/wordpress-master/master/images/standalone.svg?sanitize=true'>
+        - value: cluster
+          caption: HA Cluster
+          tooltip: <h3 style='margin:5px; text-align:center'>High Availability and Performance</h3><div style='text-align:center'>For medium and large size production sites</div><img width='270' height='360' style='margin:0 0;' src='https://raw.githubusercontent.com/sych74/wordpress-master/master/images/cluster.svg?sanitize=true'>
+
